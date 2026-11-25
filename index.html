@@ -481,36 +481,47 @@
                         <label for="settings-api-key" class="block text-xs font-medium text-[#1f1f1f]">Google AI Studio API Key</label>
                         <div class="flex items-center gap-2">
                             <div class="relative flex-1">
-                                <input id="settings-api-key" type="password" autocomplete="off"
+                                <input id="settings-api-key" type="password" autocomplete="off" spellcheck="false"
                                     placeholder="AIzaSy..."
-                                    class="ipad-safe-input w-full pr-10 pl-3.5 py-2 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] focus:outline-none font-mono" />
+                                    class="ipad-safe-input w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] font-mono text-xs focus:outline-none" />
                                 <button type="button" onclick="toggleApiKeyVisibility()" title="Show or hide API key"
                                     class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#444746] hover:text-[#1f1f1f]">
                                     <i id="api-key-eye-icon" data-lucide="eye" class="w-4 h-4"></i>
                                 </button>
                             </div>
-                            <button type="button" id="test-api-btn" onclick="testGeminiConnection()"
-                                class="px-3.5 py-2.5 rounded-xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#1f1f1f] text-xs font-medium shrink-0 transition-colors">
+                            <button id="test-api-btn" type="button" onclick="testGeminiConnection()"
+                                class="px-3.5 py-2.5 rounded-xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#1f1f1f] text-xs font-medium transition-colors shrink-0">
                                 Test
                             </button>
                         </div>
-                        <p id="api-test-status" class="text-[11px] text-[#444746]">
+                        <div id="api-test-status" class="text-[11px] text-[#444746]">
                             Stored strictly in your browser's localStorage—never uploaded anywhere.
-                        </p>
+                        </div>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label for="settings-model-select" class="block text-xs font-medium text-[#1f1f1f]">Active Model</label>
+                        <label for="settings-model-select" class="block text-xs font-medium text-[#1f1f1f]">Main Thread Model (Locked — Never Downgrades)</label>
                         <select id="settings-model-select"
                             class="ipad-safe-input w-full px-3.5 py-2.5 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] focus:outline-none">
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro — Deep Coding & Architecture</option>
                             <option value="gemini-2.5-flash">Gemini 2.5 Flash — Fast & Capable</option>
-                            <option value="gemini-2.5-pro">Gemini 2.5 Pro — Deep Reasoning</option>
-                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite — Ultra Fast</option>
-                            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite — Free Tier Workhorse</option>
                             <option value="gemini-3.8-flash">Gemini 3.8 Flash — Balanced Coding & Chat</option>
                             <option value="gemini-4-hydrogen">Gemini 4 Hydrogen — Latest Fast Model</option>
                             <option value="gemini-4-neon">Gemini 4 Neon — Frontier Flagship</option>
+                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite — Ultra Fast</option>
+                            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite — Lightweight</option>
                             <option value="demo">Demo Mode — Offline Simulated Replies</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="settings-note-model-select" class="block text-xs font-medium text-[#1f1f1f]">Post-It Sidekick Model (Quick Clarifiers)</label>
+                        <select id="settings-note-model-select"
+                            class="ipad-safe-input w-full px-3.5 py-2.5 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] focus:outline-none">
+                            <option value="same">Same as Main Thread Model</option>
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash — Fast & Capable</option>
+                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite — Ultra Fast</option>
+                            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite — Lightweight</option>
                         </select>
                     </div>
                 </div>
@@ -593,7 +604,8 @@
 
         let appSettings = {
             apiKey: '',
-            model: 'gemini-2.5-flash'
+            model: 'gemini-2.5-pro',
+            noteModel: 'gemini-2.5-flash'
         };
 
         const NOTE_THEMES = {
@@ -1734,17 +1746,105 @@
         // =========================================================================
         // 7. SETTINGS, EXPORT (.MD) & JSON SYNC MODALS
         // =========================================================================
-        function updateModelStatusPill() {
-// ... existing code ... -->
-            if (focusSection === 'sync') {
-                document.getElementById('settings-section-sync')?.scrollIntoView({ behavior: 'smooth' });
+        // 6. GEMINI API CLIENT (3X SAME-MODEL RETRY) & DEMO FALLBACK
+        // =========================================================================
+        async function queryGeminiOrFallback(mainMessages, sideNote) {
+            const apiKey = (appSettings.apiKey || '').trim();
+            const chosenModel = sideNote && appSettings.noteModel && appSettings.noteModel !== 'same'
+                ? appSettings.noteModel
+                : (appSettings.model || 'gemini-2.5-pro');
+
+            if (!apiKey || chosenModel === 'demo') {
+                await new Promise(r => setTimeout(r, 650));
+                if (sideNote) {
+                    const lastQ = sideNote.messages[sideNote.messages.length - 1]?.content || '';
+                    return `*(Demo Mode)* Here is a focused clarification regarding **${sideNote.title}**:\n\nFor *"${lastQ}"*, the key takeaway fits right alongside your main thread without derailing it. Add your Google AI Studio API key in **Settings (⚙️)** for live Gemini responses.`;
+                }
+                const lastMain = mainMessages[mainMessages.length - 1]?.content || '';
+                return `*(Demo Mode)* You asked:\n> ${lastMain}\n\nTo receive live Gemini responses across both your **Main Thread** and your floating **📌 Post-It notes**, click the **⚙️ Settings** icon in the top-right corner and paste your Google AI Studio API key.`;
             }
+
+            const contents = [];
+            let systemInstructionText = 'You are Gemini, a helpful, thorough, and clear AI software engineering and productivity assistant.';
+
+            if (sideNote) {
+                const mainContextSummary = mainMessages
+                    .slice(-10)
+                    .map(m => `${m.role === 'user' ? 'User' : 'Gemini'}: ${m.content}`)
+                    .join('\n\n');
+
+                systemInstructionText =
+                    `You are answering a focused side-clarification on a sticky note alongside a main conversation. Keep your answer concise, crisp, and directly relevant so it fits comfortably inside a compact Post-It card.\n\n` +
+                    (sideNote.anchorQuote ? `Highlighted passage the user is asking about:\n"${sideNote.anchorQuote}"\n\n` : '') +
+                    `Background Main Thread Context:\n${mainContextSummary}`;
+
+                for (const m of sideNote.messages) {
+                    contents.push({
+                        role: m.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: m.content }]
+                    });
+                }
+            } else {
+                for (const m of mainMessages) {
+                    contents.push({
+                        role: m.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: m.content }]
+                    });
+                }
+            }
+
+            const cleanModel = chosenModel.replace(/^models\//, '');
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cleanModel)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+            const maxAttempts = 3;
+            let lastError = null;
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    const res = await fetchWithTimeout(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            systemInstruction: { parts: [{ text: systemInstructionText }] },
+                            contents
+                        })
+                    }, 45000);
+
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                        const errMsg = data?.error?.message || `Gemini API error (HTTP ${res.status})`;
+                        const isTransient = res.status === 503 || res.status === 429 || res.status === 500;
+                        if (isTransient && attempt < maxAttempts) {
+                            showToast(`Server busy (${res.status}), retrying ${cleanModel} (${attempt}/${maxAttempts - 1})...`, 2200);
+                            await new Promise(r => setTimeout(r, 1500 * attempt));
+                            continue;
+                        }
+                        throw new Error(errMsg);
+                    }
+
+                    const replyText = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+                    if (!replyText) {
+                        throw new Error('Gemini returned an empty response.');
+                    }
+                    return replyText;
+                } catch (err) {
+                    lastError = err;
+                    const isTimeoutOrNetwork = err.message.includes('timed out') || err.name === 'TypeError';
+                    if (isTimeoutOrNetwork && attempt < maxAttempts) {
+                        showToast(`Connection blip, retrying (${attempt}/${maxAttempts - 1})...`, 2000);
+                        await new Promise(r => setTimeout(r, 1200 * attempt));
+                        continue;
+                    }
+                    throw err;
+                }
+            }
+
+            throw lastError || new Error('Request failed after retries.');
         }
 
-        function closeSettingsModal() {
-            document.getElementById('settings-modal')?.classList.add('hidden');
-        }
-
+        // =========================================================================
+        // 7. SETTINGS, EXPORT (.MD) & JSON SYNC MODALS
+        // =========================================================================
         function toggleApiKeyVisibility() {
             const input = document.getElementById('settings-api-key');
             const icon = document.getElementById('api-key-eye-icon');
@@ -1757,12 +1857,172 @@
             }
         }
 
+        function updateModelStatusPill() {
+            const dot = document.getElementById('model-status-dot');
+            const label = document.getElementById('model-status-label');
+            if (!dot || !label) return;
+
+            const hasKey = Boolean((appSettings.apiKey || '').trim());
+            const model = appSettings.model || 'gemini-2.5-pro';
+            const cleanModel = model.replace(/^models\//, '');
+
+            if (!hasKey || cleanModel === 'demo') {
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0';
+                label.textContent = 'Demo Mode';
+            } else {
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0';
+                label.textContent = MODEL_LABELS[cleanModel] || cleanModel;
+            }
+        }
+
+        function openSettingsModal(focusSection = 'api') {
+            const modal = document.getElementById('settings-modal');
+            const keyInput = document.getElementById('settings-api-key');
+            const modelSelect = document.getElementById('settings-model-select');
+            const noteModelSelect = document.getElementById('settings-note-model-select');
+            const statusEl = document.getElementById('api-test-status');
+
+            if (keyInput) keyInput.value = appSettings.apiKey || '';
+            if (modelSelect) {
+                const targetModel = (appSettings.model || 'gemini-2.5-pro').replace(/^models\//, '');
+                if (!Array.from(modelSelect.options).some(o => o.value === targetModel)) {
+                    const opt = document.createElement('option');
+                    opt.value = targetModel;
+                    opt.textContent = MODEL_LABELS[targetModel] || targetModel;
+                    modelSelect.appendChild(opt);
+                }
+                modelSelect.value = targetModel;
+            }
+            if (noteModelSelect) {
+                const targetNoteModel = (appSettings.noteModel || 'gemini-2.5-flash').replace(/^models\//, '');
+                if (!Array.from(noteModelSelect.options).some(o => o.value === targetNoteModel)) {
+                    const opt = document.createElement('option');
+                    opt.value = targetNoteModel;
+                    opt.textContent = MODEL_LABELS[targetNoteModel] || targetNoteModel;
+                    noteModelSelect.appendChild(opt);
+                }
+                noteModelSelect.value = targetNoteModel;
+            }
+            if (statusEl) {
+                statusEl.className = 'text-[11px] text-[#444746]';
+                statusEl.textContent = "Stored strictly in your browser's localStorage—never uploaded anywhere.";
+            }
+
+            if (modal) modal.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            if (focusSection === 'sync') {
+                document.getElementById('settings-section-sync')?.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        async function testGeminiConnection() {
+            const keyInput = document.getElementById('settings-api-key');
+            const modelSelect = document.getElementById('settings-model-select');
+            const noteModelSelect = document.getElementById('settings-note-model-select');
+            const testBtn = document.getElementById('test-api-btn');
+            const statusEl = document.getElementById('api-test-status');
+
+            const rawKey = (keyInput?.value || '').replace(/\s+/g, '');
+            if (keyInput) keyInput.value = rawKey;
+
+            if (!rawKey) {
+                if (statusEl) {
+                    statusEl.className = 'text-[11px] text-rose-600 font-medium';
+                    statusEl.textContent = 'Please paste your Google AI Studio API key first.';
+                }
+                return;
+            }
+
+            testBtn.disabled = true;
+            testBtn.textContent = 'Testing...';
+            if (statusEl) {
+                statusEl.className = 'text-[11px] text-[#1a73e8] font-medium';
+                statusEl.textContent = 'Verifying key & fetching available Gemini models...';
+            }
+
+            try {
+                const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(rawKey)}`;
+                const listRes = await fetchWithTimeout(listUrl, { method: 'GET' }, 12000);
+                const listData = await listRes.json().catch(() => ({}));
+
+                if (!listRes.ok) {
+                    throw new Error(listData?.error?.message || `API key check failed (HTTP ${listRes.status})`);
+                }
+
+                const validModels = (listData.models || [])
+                    .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+                    .map(m => m.name.replace(/^models\//, ''))
+                    .filter(name => name.startsWith('gemini-'));
+
+                if (validModels.length > 0 && modelSelect) {
+                    const prevMain = modelSelect.value;
+                    const prevNote = noteModelSelect?.value || 'gemini-2.5-flash';
+
+                    modelSelect.innerHTML = validModels.map(m =>
+                        `<option value="${escapeHtml(m)}">${escapeHtml(MODEL_LABELS[m] || m)}</option>`
+                    ).join('') + `<option value="demo">Demo Mode — Offline Simulated Replies</option>`;
+
+                    if (validModels.includes(prevMain)) {
+                        modelSelect.value = prevMain;
+                    } else if (validModels.includes('gemini-2.5-pro')) {
+                        modelSelect.value = 'gemini-2.5-pro';
+                    } else if (validModels.includes('gemini-2.5-flash')) {
+                        modelSelect.value = 'gemini-2.5-flash';
+                    }
+
+                    if (noteModelSelect) {
+                        noteModelSelect.innerHTML = `<option value="same">Same as Main Thread Model</option>` + validModels.map(m =>
+                            `<option value="${escapeHtml(m)}">${escapeHtml(MODEL_LABELS[m] || m)}</option>`
+                        ).join('');
+                        noteModelSelect.value = (prevNote === 'same' || validModels.includes(prevNote)) ? prevNote : 'same';
+                    }
+                }
+
+                const chosenModel = (modelSelect?.value || 'gemini-2.5-pro').replace(/^models\//, '');
+                if (chosenModel !== 'demo') {
+                    const pingUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(chosenModel)}:generateContent?key=${encodeURIComponent(rawKey)}`;
+                    const pingRes = await fetchWithTimeout(pingUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ role: 'user', parts: [{ text: 'Reply with OK' }] }],
+                            generationConfig: { maxOutputTokens: 8 }
+                        })
+                    }, 15000);
+                    const pingData = await pingRes.json().catch(() => ({}));
+                    if (!pingRes.ok) {
+                        throw new Error(pingData?.error?.message || `Model ${chosenModel} returned HTTP ${pingRes.status}`);
+                    }
+                }
+
+                if (statusEl) {
+                    statusEl.className = 'text-[11px] text-emerald-700 font-medium';
+                    statusEl.textContent = `✓ Connected! ${validModels.length} Gemini models unlocked. Click Save Settings.`;
+                }
+            } catch (err) {
+                if (statusEl) {
+                    statusEl.className = 'text-[11px] text-rose-600 font-medium';
+                    statusEl.textContent = `✕ ${err.message}`;
+                }
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = 'Test';
+            }
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal')?.classList.add('hidden');
+        }
+
         function saveSettingsFromModal() {
             const keyVal = (document.getElementById('settings-api-key')?.value || '').replace(/\s+/g, '');
-            const modelVal = document.getElementById('settings-model-select')?.value || 'gemini-2.5-flash';
+            const modelVal = document.getElementById('settings-model-select')?.value || 'gemini-2.5-pro';
+            const noteModelVal = document.getElementById('settings-note-model-select')?.value || 'gemini-2.5-flash';
 
             appSettings.apiKey = keyVal;
             appSettings.model = modelVal;
+            appSettings.noteModel = noteModelVal;
             saveState();
             updateModelStatusPill();
             closeSettingsModal();
@@ -1773,48 +2033,56 @@
             const payload = {
                 version: 2,
                 exportedAt: new Date().toISOString(),
+                activeSessionId,
                 sessions
             };
-            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `gemini-workspace-${new Date().toISOString().slice(0, 10)}.json`;
+            a.download = `gemini-workspace-backup-${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
-            showToast('Workspace exported (.json)');
+            showToast('Exported workspace backup (.json)');
         }
 
         function handleImportWorkspaceJSON(event) {
-            const file = event.target?.files?.[0];
+            const file = event?.target?.files?.[0];
             if (!file) return;
-            const merge = document.getElementById('import-merge-checkbox')?.checked ?? true;
 
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
                     const parsed = JSON.parse(String(e.target?.result || '{}'));
-                    const importedSessions = Array.isArray(parsed) ? parsed : parsed.sessions;
-                    if (!Array.isArray(importedSessions) || importedSessions.length === 0) {
+                    const importedSessions = Array.isArray(parsed.sessions) ? parsed.sessions : (Array.isArray(parsed) ? parsed : null);
+                    if (!importedSessions || importedSessions.length === 0) {
                         throw new Error('No valid threads found in JSON file.');
                     }
 
-                    if (merge) {
-                        const existingIds = new Set(sessions.map(s => s.id));
-                        const fresh = importedSessions.filter(s => s && s.id && !existingIds.has(s.id));
-                        sessions = [...fresh, ...sessions];
-                        showToast(`Merged ${fresh.length} new thread(s)`);
+                    const shouldMerge = document.getElementById('import-merge-checkbox')?.checked ?? true;
+                    if (shouldMerge) {
+                        const existingMap = new Map(sessions.map(s => [s.id, s]));
+                        for (const item of importedSessions) {
+                            if (item && item.id && Array.isArray(item.messages)) {
+                                existingMap.set(item.id, item);
+                            }
+                        }
+                        sessions = Array.from(existingMap.values());
                     } else {
-                        sessions = importedSessions;
-                        activeSessionId = sessions[0].id;
-                        showToast(`Restored ${sessions.length} thread(s)`);
+                        sessions = importedSessions.filter(s => s && s.id && Array.isArray(s.messages));
+                        if (sessions.length > 0) {
+                            activeSessionId = parsed.activeSessionId && sessions.some(s => s.id === parsed.activeSessionId)
+                                ? parsed.activeSessionId
+                                : sessions[0].id;
+                        }
                     }
 
                     saveState();
                     renderAll();
                     closeSettingsModal();
+                    showToast(`Imported ${importedSessions.length} thread(s)`);
                 } catch (err) {
-                    showToast(`Import failed: ${err.message}`);
+                    showToast(`Import failed: ${err.message}`, 3500);
                 } finally {
                     event.target.value = '';
                 }
@@ -1828,31 +2096,7 @@
             saveState();
             renderAll();
             closeSettingsModal();
-            showToast('Sample threads restored');
-        }
-
-        function buildExportMarkdown() {
-            const sess = getActiveSession();
-            if (!sess) return '';
-            const includeNotes = document.getElementById('export-include-notes')?.checked ?? true;
-
-            let md = `# ${sess.title || 'Gemini Thread'}\n\n`;
-            for (const m of sess.messages) {
-                md += `## ${m.role === 'user' ? 'You' : 'Gemini'}\n\n${m.content}\n\n---\n\n`;
-            }
-
-            if (includeNotes && sess.notes && sess.notes.length > 0) {
-                md += `## 📌 Sidekick Post-It Footnotes\n\n`;
-                for (const n of sess.notes) {
-                    md += `### ${n.title}\n`;
-                    if (n.anchorQuote) md += `> "${n.anchorQuote}"\n\n`;
-                    for (const nm of (n.messages || [])) {
-                        md += `- **${nm.role === 'user' ? 'Question' : 'Answer'}:** ${nm.content}\n`;
-                    }
-                    md += `\n`;
-                }
-            }
-            return md.trim();
+            showToast('Restored sample threads & Post-Its');
         }
 
         function openExportModal() {
@@ -1865,14 +2109,45 @@
             document.getElementById('export-modal')?.classList.add('hidden');
         }
 
+        function buildExportMarkdown() {
+            const sess = getActiveSession();
+            if (!sess) return '';
+            const includeNotes = document.getElementById('export-include-notes')?.checked ?? true;
+
+            const lines = [`# ${sess.title || 'Gemini Thread'}`, ''];
+            for (const msg of sess.messages) {
+                if (msg.role === 'user') {
+                    lines.push(`## User`, '', msg.content, '');
+                } else {
+                    lines.push(`## Gemini`, '', msg.content, '');
+                }
+            }
+
+            if (includeNotes && Array.isArray(sess.notes) && sess.notes.length > 0) {
+                lines.push('---', '', '## 📌 Post-It Clarifier Footnotes', '');
+                sess.notes.forEach((note, idx) => {
+                    lines.push(`### ${idx + 1}. ${note.title}`);
+                    if (note.anchorQuote) {
+                        lines.push(`> "${note.anchorQuote}"`, '');
+                    }
+                    for (const m of (note.messages || [])) {
+                        lines.push(`- **${m.role === 'user' ? 'Question' : 'Answer'}:** ${m.content}`);
+                    }
+                    lines.push('');
+                });
+            }
+
+            return lines.join('\n');
+        }
+
         function updateExportPreview() {
-            const ta = document.getElementById('export-preview-textarea');
-            if (ta) ta.value = buildExportMarkdown();
+            const area = document.getElementById('export-preview-textarea');
+            if (area) area.value = buildExportMarkdown();
         }
 
         function copyExportMarkdown() {
-            const ta = document.getElementById('export-preview-textarea');
-            if (ta) copyTextToClipboard(ta.value, 'Markdown copied to clipboard');
+            const md = buildExportMarkdown();
+            copyTextToClipboard(md, 'Markdown copied to clipboard');
         }
 
         function downloadExportMarkdown() {
@@ -1888,4 +2163,75 @@
             URL.revokeObjectURL(url);
             showToast('Downloaded .md file');
         }
-// ... existing code ... -->
+
+        // =========================================================================
+        // 8. VIEWPORT SYNC, GLOBAL LISTENERS & BOOTSTRAP
+        // =========================================================================
+        function syncViewportHeight() {
+            const root = document.getElementById('app-root');
+            if (!root) return;
+            if (window.visualViewport) {
+                root.style.height = `${window.visualViewport.height}px`;
+            } else {
+                root.style.height = `${window.innerHeight}px`;
+            }
+        }
+
+        function setupGlobalListeners() {
+            const mainInput = document.getElementById('main-prompt-input');
+            if (mainInput) {
+                attachIPadFocusFix(mainInput);
+                mainInput.addEventListener('input', () => {
+                    mainInput.style.height = 'auto';
+                    mainInput.style.height = `${Math.min(mainInput.scrollHeight, 144)}px`;
+                });
+                mainInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMainMessage();
+                    }
+                });
+            }
+
+            const searchInput = document.getElementById('thread-search-input');
+            if (searchInput) attachIPadFocusFix(searchInput);
+
+            const settingsKeyInput = document.getElementById('settings-api-key');
+            if (settingsKeyInput) attachIPadFocusFix(settingsKeyInput);
+
+            document.addEventListener('mouseup', () => setTimeout(handleTextSelection, 10));
+            document.addEventListener('touchend', () => setTimeout(handleTextSelection, 80));
+            document.addEventListener('selectionchange', () => {
+                const sel = window.getSelection();
+                if (!sel || !sel.toString().trim()) {
+                    hideSelectionTooltip();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                syncViewportHeight();
+                applyLeftSidebarUI();
+                renderPostItNotes();
+            });
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', syncViewportHeight);
+                window.visualViewport.addEventListener('scroll', syncViewportHeight);
+            }
+        }
+
+        function initApp() {
+            syncViewportHeight();
+            loadState();
+            setupGlobalListeners();
+            renderAll();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+    </script>
+</body>
+</html>
