@@ -290,6 +290,11 @@
 
         <!-- Bottom: Export / Sync / Settings Links (Classic Gemini Footer) -->
         <div class="p-3 border-t border-slate-200/70 space-y-0.5 text-sm text-[#1f1f1f]">
+            <button onclick="openImportPasteModal()"
+                class="w-full flex items-center gap-3 px-3 py-2 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
+                <svg class="w-4 h-4 shrink-0 text-[#1a73e8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M12 11v6"/><path d="M9 14h6"/></svg>
+                <span class="truncate">Import / Paste chat</span>
+            </button>
             <button onclick="openExportModal()"
                 class="w-full flex items-center gap-3 px-3 py-2 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
                 <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -445,6 +450,51 @@
                     class="flex items-center gap-2 px-5 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium transition-colors shadow-2xs">
                     <i data-lucide="download" class="w-3.5 h-3.5"></i>
                     <span>Download .md</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import / Paste Existing Gemini Chat Modal -->
+    <div id="import-paste-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-[2px] flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="gemini-sparkle text-lg">✦</span>
+                    <h3 class="font-display font-semibold text-[#1f1f1f] text-base">Bring Over Existing Chat History</h3>
+                </div>
+                <button onclick="closeImportPasteModal()" class="w-8 h-8 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746] text-lg font-medium">
+                    ×
+                </button>
+            </div>
+            <div class="p-6 flex-1 overflow-y-auto space-y-4">
+                <div class="p-3.5 rounded-2xl bg-[#f0f4f9] text-xs text-[#444746] space-y-1.5 leading-relaxed">
+                    <div class="font-semibold text-[#1f1f1f]">How to bring over WalkTracker, TruShuffl, or any Gemini thread:</div>
+                    <div>1. In your original Gemini tab, copy the conversation (or ask Gemini: <em>"Summarize our progress and output our latest complete working code"</em> and copy that).</div>
+                    <div>2. Paste it below—we automatically parse <code class="px-1 py-0.5 rounded bg-white text-[#0b57d0]">You said</code> / <code class="px-1 py-0.5 rounded bg-white text-[#0b57d0]">Gemini said</code> turns or import it as a clean starting context block.</div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="import-thread-title" class="block text-xs font-medium text-[#1f1f1f]">Thread Title</label>
+                    <input id="import-thread-title" type="text" placeholder="e.g., WalkTracker v2 Development"
+                        class="ipad-safe-input w-full px-3.5 py-2 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] text-sm focus:outline-none" />
+                </div>
+
+                <div class="space-y-1.5">
+                    <label for="import-thread-raw" class="block text-xs font-medium text-[#1f1f1f]">Paste Copied Chat or Project Context</label>
+                    <textarea id="import-thread-raw" rows="8"
+                        placeholder="Paste your copied Gemini conversation or latest working code here..."
+                        class="ipad-safe-input w-full rounded-2xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white p-3.5 text-xs text-[#1f1f1f] focus:outline-none resize-none leading-relaxed"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-[#f8fafd] border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeImportPasteModal()"
+                    class="px-4 py-2 rounded-full bg-white hover:bg-[#f0f4f9] text-[#1f1f1f] border border-slate-300 text-xs font-medium transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="confirmImportPastedThread()"
+                    class="px-5 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium transition-colors shadow-2xs">
+                    Create Thread & Continue
                 </button>
             </div>
         </div>
@@ -1434,78 +1484,312 @@
             document.querySelectorAll('.source-message-highlighted').forEach(el => el.classList.remove('source-message-highlighted'));
         }
 
-        // =========================================================================
-        // 6. GEMINI API CLIENT & DEMO FALLBACK
-        // =========================================================================
-        async function queryGeminiOrFallback(mainMessages, sideNote) {
-            const apiKey = (appSettings.apiKey || '').trim();
-            const model = appSettings.model || 'gemini-2.5-flash';
+        function bringPostItToFront(noteId) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            if (!note) return;
+            note.zIndex = ++topZIndex;
+            const el = document.getElementById(`postit-${noteId}`);
+            if (el) el.style.zIndex = String(note.zIndex);
+            saveState();
+        }
 
-            if (!apiKey || model === 'demo') {
-                await new Promise(r => setTimeout(r, 650));
-                if (sideNote) {
-                    const lastQ = sideNote.messages[sideNote.messages.length - 1]?.content || '';
-                    return `*(Demo Mode)* Here is a focused clarification regarding **${sideNote.title}**:\n\nFor *"${lastQ}"*, the key takeaway fits right alongside your main thread without derailing it. Add your free Google AI Studio API key in **Settings (⚙️)** for live Gemini responses.`;
+        function startDragPostIt(e, noteId) {
+            if (e.button !== undefined && e.button !== 0) return;
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            const cardEl = document.getElementById(`postit-${noteId}`);
+            if (!note || !cardEl) return;
+
+            bringPostItToFront(noteId);
+            cardEl.classList.add('dragging');
+
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const origX = cardEl.offsetLeft;
+            const origY = cardEl.offsetTop;
+
+            const onPointerMove = (moveEvt) => {
+                const dx = moveEvt.clientX - startX;
+                const dy = moveEvt.clientY - startY;
+                const maxX = Math.max(12, window.innerWidth - cardEl.offsetWidth - 12);
+                const maxY = Math.max(68, window.innerHeight - 64);
+                note.x = Math.min(Math.max(12, origX + dx), maxX);
+                note.y = Math.min(Math.max(68, origY + dy), maxY);
+                cardEl.style.left = `${note.x}px`;
+                cardEl.style.top = `${note.y}px`;
+                if (activeHoveredNoteId === noteId) {
+                    updateTetherLine(noteId);
                 }
-                const lastMain = mainMessages[mainMessages.length - 1]?.content || '';
-                return `*(Demo Mode)* You asked:\n> ${lastMain}\n\nTo receive live Gemini responses across both your **Main Thread** and your floating **📌 Post-It notes**, click the **⚙️ Settings** icon in the top-right corner and paste your Google AI Studio API key.`;
+            };
+
+            const onPointerUp = () => {
+                cardEl.classList.remove('dragging');
+                window.removeEventListener('pointermove', onPointerMove);
+                window.removeEventListener('pointerup', onPointerUp);
+                saveState();
+            };
+
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+        }
+
+        function renamePostIt(noteId, newTitle) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            if (!note) return;
+            note.title = (newTitle || '').trim() || 'Side Note';
+            saveState();
+            renderMainThread();
+        }
+
+        function changePostItColor(noteId, colorKey) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            if (!note || !NOTE_THEMES[colorKey]) return;
+            note.color = colorKey;
+            saveState();
+            renderPostItNotes();
+        }
+
+        function toggleMinimizePostIt(noteId) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            if (!note) return;
+            note.minimized = !note.minimized;
+            saveState();
+            renderPostItNotes();
+        }
+
+        function deletePostIt(noteId) {
+            const sess = getActiveSession();
+            if (!sess) return;
+            sess.notes = sess.notes.filter(n => n.id !== noteId);
+            hideTetherLine();
+            saveState();
+            renderMainThread();
+            renderPostItNotes();
+        }
+
+        function focusPostItNote(noteId) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            if (!note) return;
+            areNotesVisible = true;
+            note.minimized = false;
+            note.zIndex = ++topZIndex;
+            saveState();
+            renderPostItNotes();
+            setTimeout(() => focusElementSafely(`note-input-${noteId}`), 50);
+        }
+
+        function toggleAllNotesVisibility() {
+            areNotesVisible = !areNotesVisible;
+            renderPostItNotes();
+        }
+
+        function tidyStackRight() {
+            const sess = getActiveSession();
+            if (!sess || !sess.notes.length) {
+                showToast('No open Post-It notes to align');
+                return;
+            }
+            areNotesVisible = true;
+            const noteWidth = Math.min(324, window.innerWidth - 28);
+            const rightX = Math.max(14, window.innerWidth - noteWidth - 20);
+            let currentY = 82;
+
+            sess.notes.forEach((note, idx) => {
+                note.x = rightX;
+                note.y = Math.min(currentY, Math.max(82, window.innerHeight - 140));
+                note.zIndex = 31 + idx;
+                currentY += note.minimized ? 48 : 210;
+            });
+            topZIndex = 31 + sess.notes.length;
+            saveState();
+            renderPostItNotes();
+            showToast('Aligned Post-Its along right margin');
+        }
+
+        async function sendPostItMessage(noteId) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            const input = document.getElementById(`note-input-${noteId}`);
+            if (!sess || !note || !input || note.isGenerating) return;
+
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (note.messages.length === 0 && note.title.startsWith('Side Note #')) {
+                note.title = text.length > 26 ? text.slice(0, 26) + '…' : text;
             }
 
-            const contents = [];
-            let systemInstructionText = 'You are Gemini, a helpful, concise, and clear AI assistant.';
+            note.messages.push({ role: 'user', content: text });
+            note.isGenerating = true;
+            input.value = '';
+            saveState();
+            renderMainThread();
+            renderPostItNotes();
 
-            if (sideNote) {
-                const mainContextSummary = mainMessages
-                    .slice(-10)
-                    .map(m => `${m.role === 'user' ? 'User' : 'Gemini'}: ${m.content}`)
-                    .join('\n\n');
+            try {
+                const reply = await queryGeminiOrFallback(sess.messages, note);
+                note.messages.push({ role: 'assistant', content: reply });
+            } catch (err) {
+                note.messages.push({ role: 'assistant', content: `⚠️ ${err.message}` });
+            } finally {
+                note.isGenerating = false;
+                saveState();
+                renderPostItNotes();
+            }
+        }
 
-                systemInstructionText =
-                    `You are answering a focused side-clarification on a sticky note alongside a main conversation. Keep your answer concise, crisp, and directly relevant so it fits comfortably inside a compact Post-It card.\n\n` +
-                    (sideNote.anchorQuote ? `Highlighted passage the user is asking about:\n"${sideNote.anchorQuote}"\n\n` : '') +
-                    `Background Main Thread Context:\n${mainContextSummary}`;
+        function promotePostItToMain(noteId) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            if (!sess || !note || !note.messages.length) return;
 
-                for (const m of sideNote.messages) {
-                    contents.push({
-                        role: m.role === 'user' ? 'user' : 'model',
-                        parts: [{ text: m.content }]
-                    });
-                }
-            } else {
-                for (const m of mainMessages) {
-                    contents.push({
-                        role: m.role === 'user' ? 'user' : 'model',
-                        parts: [{ text: m.content }]
-                    });
-                }
+            const summaryLines = note.messages.map(m =>
+                m.role === 'user' ? `**Side Question:** ${m.content}` : `**Clarification:**\n${m.content}`
+            ).join('\n\n');
+
+            sess.messages.push({
+                id: uid('msg'),
+                role: 'assistant',
+                content: `### 📌 Merged from Post-It: *${note.title}*\n\n${summaryLines}`
+            });
+            sess.updatedAt = Date.now();
+            saveState();
+            renderMainThread();
+            scrollMainToBottom();
+            showToast('Merged Post-It takeaway into Main Thread');
+        }
+
+        function handleTextSelection() {
+            const sel = window.getSelection();
+            const tooltip = document.getElementById('selection-tooltip');
+            const mainContainer = document.getElementById('main-thread-container');
+            if (!sel || !tooltip || !mainContainer) return;
+
+            const selectedText = sel.toString().trim();
+            if (!selectedText || selectedText.length < 3 || sel.rangeCount === 0) {
+                hideSelectionTooltip();
+                return;
             }
 
-            const cleanModel = model.replace(/^models\//, '');
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cleanModel)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-
-            const res = await fetchWithTimeout(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    systemInstruction: { parts: [{ text: systemInstructionText }] },
-                    contents
-                })
-            }, 30000);
-
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                throw new Error(data?.error?.message || `Gemini API error (HTTP ${res.status})`);
+            const range = sel.getRangeAt(0);
+            const commonAncestor = range.commonAncestorContainer;
+            const elementNode = commonAncestor.nodeType === 1 ? commonAncestor : commonAncestor.parentElement;
+            if (!elementNode || !mainContainer.contains(elementNode)) {
+                hideSelectionTooltip();
+                return;
             }
 
-            const replyText = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-            if (!replyText) {
-                throw new Error('Gemini returned an empty response.');
-            }
-            return replyText;
+            const msgWrapper = elementNode.closest('[data-message-id]');
+            const messageId = msgWrapper ? msgWrapper.getAttribute('data-message-id') : null;
+            pendingSelection = { text: selectedText, messageId };
+
+            const rect = range.getBoundingClientRect();
+            const left = Math.min(Math.max(90, rect.left + rect.width / 2), window.innerWidth - 90);
+            const top = Math.max(72, rect.top - 6);
+
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+            tooltip.classList.remove('hidden');
+        }
+
+        function hideSelectionTooltip() {
+            document.getElementById('selection-tooltip')?.classList.add('hidden');
+        }
+
+        function createPostItFromSelection() {
+            if (!pendingSelection.text) return;
+            const quote = pendingSelection.text;
+            const msgId = pendingSelection.messageId;
+            pendingSelection = { text: '', messageId: null };
+            hideSelectionTooltip();
+            try { window.getSelection()?.removeAllRanges(); } catch (_) {}
+            spawnPostItNote({ anchorQuote: quote, anchorMessageId: msgId });
         }
 
         // =========================================================================
-        // 7. SETTINGS, EXPORT (.MD) & JSON SYNC MODALS
+        // 5. IMPORT / PASTE EXISTING CHAT HISTORY
+        // =========================================================================
+        function openImportPasteModal() {
+            const modal = document.getElementById('import-paste-modal');
+            const titleInput = document.getElementById('import-thread-title');
+            const rawInput = document.getElementById('import-thread-raw');
+            if (titleInput) titleInput.value = '';
+            if (rawInput) rawInput.value = '';
+            if (modal) modal.classList.remove('hidden');
+            setTimeout(() => focusElementSafely('import-thread-title'), 50);
+        }
+
+        function closeImportPasteModal() {
+            document.getElementById('import-paste-modal')?.classList.add('hidden');
+        }
+
+        function parseCopiedChatTranscript(rawText) {
+            const cleaned = rawText.replace(/\r\n/g, '\n').trim();
+            const turnRegex = /(?:^|\n)(You said|User|Prompt|Gemini said|Model|Assistant)\s*:?\s*\n/gi;
+            const matches = [...cleaned.matchAll(turnRegex)];
+
+            if (matches.length >= 2) {
+                const parsedMessages = [];
+                for (let i = 0; i < matches.length; i++) {
+                    const marker = matches[i][1].toLowerCase();
+                    const role = (marker.startsWith('you') || marker === 'user' || marker === 'prompt') ? 'user' : 'assistant';
+                    const startIdx = matches[i].index + matches[i][0].length;
+                    const endIdx = i + 1 < matches.length ? matches[i + 1].index : cleaned.length;
+                    const body = cleaned.slice(startIdx, endIdx).trim();
+                    if (body) {
+                        parsedMessages.push({ id: uid('msg'), role, content: body });
+                    }
+                }
+                if (parsedMessages.length > 0) return parsedMessages;
+            }
+
+            return [
+                {
+                    id: uid('msg'),
+                    role: 'user',
+                    content: 'Here is our previous conversation and current working context to continue from:\n\n' + cleaned
+                },
+                {
+                    id: uid('msg'),
+                    role: 'assistant',
+                    content: 'Got it—I have the full context from your imported thread loaded into this conversation. What would you like to build or refine next?'
+                }
+            ];
+        }
+
+        function confirmImportPastedThread() {
+            const titleVal = (document.getElementById('import-thread-title')?.value || '').trim();
+            const rawVal = (document.getElementById('import-thread-raw')?.value || '').trim();
+            if (!rawVal) {
+                showToast('Please paste your conversation or project context first');
+                return;
+            }
+
+            const messages = parseCopiedChatTranscript(rawVal);
+            const derivedTitle = titleVal || (messages[0].content.slice(0, 40).replace(/\n/g, ' ') + '…');
+
+            const newSess = {
+                id: uid('sess'),
+                title: derivedTitle,
+                updatedAt: Date.now(),
+                messages,
+                notes: []
+            };
+
+            sessions.unshift(newSess);
+            activeSessionId = newSess.id;
+            saveState();
+            renderAll();
+            closeImportPasteModal();
+            if (window.innerWidth < 768) toggleLeftSidebar(false);
+            showToast(`Imported "${derivedTitle}" (${messages.length} turns)`);
+        }
+
         // =========================================================================
         // 6. GEMINI API CLIENT (3X SAME-MODEL RETRY) & DEMO FALLBACK
         // =========================================================================
