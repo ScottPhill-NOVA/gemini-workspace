@@ -228,10 +228,14 @@
         .app-shell {
             height: 100vh;
             height: 100dvh;
+            max-height: 100%;
+            position: fixed;
+            inset: 0;
         }
     </style>
 </head>
-<body class="app-shell bg-white text-[#1f1f1f] font-sans w-screen overflow-hidden flex selection:bg-blue-100 selection:text-blue-900">
+<body class="bg-white text-[#1f1f1f] font-sans overflow-hidden selection:bg-blue-100 selection:text-blue-900">
+<div id="app-root" class="app-shell w-full overflow-hidden flex">
 
     <!-- SVG Overlay for Subtle Visual Tether Lines between Main Messages & Active Post-Its -->
     <svg id="tether-svg" class="fixed inset-0 w-full h-full pointer-events-none z-20">
@@ -410,6 +414,7 @@
         <!-- Floating Draggable Post-It Notes Layer -->
         <div id="postits-layer" class="fixed inset-0 pointer-events-none z-30"></div>
     </div>
+</div>
 
     <!-- Markdown Export Modal -->
     <div id="export-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-[2px] flex items-center justify-center p-4">
@@ -498,11 +503,13 @@
                         <label for="settings-model-select" class="block text-xs font-medium text-[#1f1f1f]">Active Model</label>
                         <select id="settings-model-select"
                             class="ipad-safe-input w-full px-3.5 py-2.5 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] focus:outline-none">
-                            <option value="gemini-4-hydrogen">Gemini 4 Hydrogen — Latest Fast Model (Default)</option>
-                            <option value="gemini-3.8-flash">Gemini 3.8 Flash — Balanced Coding & Chat</option>
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash — Fast & Capable</option>
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro — Deep Reasoning</option>
+                            <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite — Ultra Fast</option>
                             <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite — Free Tier Workhorse</option>
+                            <option value="gemini-3.8-flash">Gemini 3.8 Flash — Balanced Coding & Chat</option>
+                            <option value="gemini-4-hydrogen">Gemini 4 Hydrogen — Latest Fast Model</option>
                             <option value="gemini-4-neon">Gemini 4 Neon — Frontier Flagship</option>
-                            <option value="gemini-4-carbon">Gemini 4 Carbon — Deep Reasoning</option>
                             <option value="demo">Demo Mode — Offline Simulated Replies</option>
                         </select>
                     </div>
@@ -573,9 +580,12 @@
         const SETTINGS_KEY = 'gemini_white_postit_settings_v2';
 
         const MODEL_LABELS = {
-            'gemini-4-hydrogen': 'Gemini 4 Hydrogen',
-            'gemini-3.8-flash': 'Gemini 3.8 Flash',
+            'gemini-2.5-flash': 'Gemini 2.5 Flash',
+            'gemini-2.5-pro': 'Gemini 2.5 Pro',
+            'gemini-2.5-flash-lite': 'Gemini 2.5 Flash-Lite',
             'gemini-3.5-flash-lite': 'Gemini 3.5 Flash-Lite',
+            'gemini-3.8-flash': 'Gemini 3.8 Flash',
+            'gemini-4-hydrogen': 'Gemini 4 Hydrogen',
             'gemini-4-neon': 'Gemini 4 Neon',
             'gemini-4-carbon': 'Gemini 4 Carbon',
             'demo': 'Demo Mode'
@@ -583,265 +593,160 @@
 
         let appSettings = {
             apiKey: '',
-            model: 'gemini-4-hydrogen'
+            model: 'gemini-2.5-flash'
         };
 
         const NOTE_THEMES = {
             yellow: {
-                bg: '#fef7cd',
-                header: '#fcf0ad',
-                border: '#f3e28c',
-                quoteBg: 'rgba(234, 179, 8, 0.14)',
-                quoteBorder: '#eab308',
-                dot: '#facc15'
+                name: 'Butter Yellow',
+                bg: 'bg-[#fef7cd]',
+                header: 'bg-[#fdf0a6]/80',
+                border: 'border-amber-300/90',
+                quoteBg: 'bg-amber-950/[0.06]',
+                inputBg: 'bg-white/75 focus:bg-white',
+                swatch: 'bg-[#fef08a] border-amber-400'
             },
             mint: {
-                bg: '#dcfce7',
-                header: '#c8f7d8',
-                border: '#a7ecc0',
-                quoteBg: 'rgba(22, 163, 74, 0.12)',
-                quoteBorder: '#22c55e',
-                dot: '#4ade80'
+                name: 'Soft Mint',
+                bg: 'bg-[#dcfce7]',
+                header: 'bg-[#bbf7d0]/80',
+                border: 'border-emerald-300/90',
+                quoteBg: 'bg-emerald-950/[0.06]',
+                inputBg: 'bg-white/75 focus:bg-white',
+                swatch: 'bg-[#bbf7d0] border-emerald-400'
             },
             sky: {
-                bg: '#e0f2fe',
-                header: '#cde9fd',
-                border: '#aad7fa',
-                quoteBg: 'rgba(2, 132, 199, 0.12)',
-                quoteBorder: '#0ea5e9',
-                dot: '#38bdf8'
+                name: 'Sky Blue',
+                bg: 'bg-[#e0f2fe]',
+                header: 'bg-[#bae6fd]/80',
+                border: 'border-sky-300/90',
+                quoteBg: 'bg-sky-950/[0.06]',
+                inputBg: 'bg-white/75 focus:bg-white',
+                swatch: 'bg-[#bae6fd] border-sky-400'
             },
             rose: {
-                bg: '#fce7f3',
-                header: '#fad4ea',
-                border: '#f5b8dc',
-                quoteBg: 'rgba(219, 39, 119, 0.11)',
-                quoteBorder: '#ec4899',
-                dot: '#f472b6'
+                name: 'Blush Rose',
+                bg: 'bg-[#fce7f3]',
+                header: 'bg-[#fbcfe8]/80',
+                border: 'border-pink-300/90',
+                quoteBg: 'bg-pink-950/[0.06]',
+                inputBg: 'bg-white/75 focus:bg-white',
+                swatch: 'bg-[#fbcfe8] border-pink-400'
             }
         };
 
         let sessions = [];
         let activeSessionId = null;
-        let isLeftSidebarOpen = window.innerWidth >= 768;
+        let isLeftSidebarOpen = true;
         let areNotesVisible = true;
-        let topZIndex = 100;
-        let activeTetherNoteId = null;
+        let topZIndex = 35;
+        let activeHoveredNoteId = null;
+        let pendingSelection = { text: '', messageId: null };
         let isMainGenerating = false;
-        let generatingNoteIds = new Set();
-        let currentSelectionData = null; // { text, sourceMessageId }
 
-        marked.setOptions({
-            breaks: true,
-            gfm: true,
-            highlight: function(code, lang) {
-                if (lang && hljs.getLanguage(lang)) {
+        function uid(prefix = 'id') {
+            return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function renderMarkdown(mdText) {
+            if (!mdText) return '';
+            try {
+                if (typeof marked !== 'undefined') {
+                    return marked.parse(String(mdText));
+                }
+            } catch (e) {
+                console.warn('Markdown parse error:', e);
+            }
+            return `<p>${escapeHtml(mdText).replace(/\n/g, '<br>')}</p>`;
+        }
+
+        function highlightCodeBlocks(container) {
+            if (!container || typeof hljs === 'undefined') return;
+            container.querySelectorAll('pre code').forEach((block) => {
+                try {
+                    hljs.highlightElement(block);
+                } catch (_) {}
+            });
+        }
+
+        function showToast(message, duration = 2600) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const pill = document.createElement('div');
+            pill.className = 'px-4 py-2 rounded-full bg-[#1f1f1f] text-white text-xs font-medium shadow-lg transition-all duration-200 opacity-0 translate-y-1';
+            pill.textContent = message;
+            container.appendChild(pill);
+            requestAnimationFrame(() => {
+                pill.classList.remove('opacity-0', 'translate-y-1');
+            });
+            setTimeout(() => {
+                pill.classList.add('opacity-0', '-translate-y-1');
+                setTimeout(() => pill.remove(), 220);
+            }, duration);
+        }
+
+        function focusElementSafely(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            try {
+                el.focus({ preventScroll: true });
+            } catch (_) {
+                el.focus();
+            }
+        }
+
+        function attachIPadFocusFix(el) {
+            if (!el) return;
+            const handler = () => {
+                if (document.activeElement !== el) {
                     try {
-                        return hljs.highlight(code, { language: lang }).value;
-                    } catch (e) {}
+                        el.focus({ preventScroll: true });
+                    } catch (_) {
+                        el.focus();
+                    }
                 }
-                return hljs.highlightAuto(code).value;
-            }
-        });
-
-        function buildSampleSessions() {
-            const now = Date.now();
-            const vw = window.innerWidth;
-            const defaultX = Math.max(24, vw - 356);
-
-            const session1 = {
-                id: 'sess_coffee_extraction',
-                title: 'Specialty Espresso Extraction Science',
-                updatedAt: now,
-                messages: [
-                    {
-                        id: 'msg_101',
-                        role: 'user',
-                        content: 'Explain how grind size, water temperature, and pre-infusion pressure affect espresso extraction yield and flavor balance.',
-                        timestamp: now - 600000
-                    },
-                    {
-                        id: 'msg_102',
-                        role: 'model',
-                        content: `Espresso extraction is the art of dissolving desirable flavor compounds from roasted coffee grounds while leaving bitter, astringent compounds behind. The ideal **Extraction Yield (EY)** typically sits between **18% and 22%**.\n\n### 1. Grind Size & Surface Area\nFiner grinds dramatically increase total surface area and hydraulic resistance (puck integrity). \n- **Too coarse**: Water channels rapidly through the puck, causing *under-extraction* (sour, sharp, thin body).\n- **Too fine**: Over-restriction leads to uneven channeling and *over-extraction* (hollow bitterness, drying astringency).\n\n### 2. Water Temperature (90°C – 96°C)\nThermal energy accelerates the solubility of heavier organic acids and caramelized sugars.\n- **Light roasts** are denser and less soluble, benefiting from **94°C–96°C**.\n- **Dark roasts** are porous and brittle; **90°C–92°C** prevents extracting harsh pyrolytic compounds.\n\n### 3. Low-Pressure Pre-Infusion\nIntroducing water at **2–3 bars** for 5–8 seconds gently saturates the dry coffee bed before full **9-bar** ramp-up. This swells the grounds evenly, seals micro-fissures, and allows a finer grind without channeling.`,
-                        timestamp: now - 540000
-                    }
-                ],
-                notes: [
-                    {
-                        id: 'note_201',
-                        sourceMessageId: 'msg_102',
-                        anchorText: 'The ideal Extraction Yield (EY) typically sits between 18% and 22%.',
-                        color: 'yellow',
-                        x: defaultX,
-                        y: 88,
-                        minimized: false,
-                        pinned: true,
-                        zIndex: 102,
-                        thread: [
-                            {
-                                role: 'user',
-                                content: 'How do baristas actually measure Extraction Yield in a cafe?'
-                            },
-                            {
-                                role: 'model',
-                                content: 'They use a **digital refractometer** to measure **TDS (Total Dissolved Solids)** in a drop of espresso, then multiply:\n\n`EY % = (Beverage Weight × TDS %) ÷ Dry Dose Weight`\n\nFor example, 36g out at 10% TDS from an 18g dose equals **20% Extraction Yield**.'
-                            }
-                        ]
-                    },
-                    {
-                        id: 'note_202',
-                        sourceMessageId: 'msg_102',
-                        anchorText: 'Introducing water at 2–3 bars for 5–8 seconds gently saturates the dry coffee bed',
-                        color: 'mint',
-                        x: defaultX - 18,
-                        y: 430,
-                        minimized: false,
-                        pinned: false,
-                        zIndex: 101,
-                        thread: [
-                            {
-                                role: 'user',
-                                content: 'Does pre-infusion count toward the classic 25–30 second shot timer?'
-                            },
-                            {
-                                role: 'model',
-                                content: 'Yes! Most specialty baristas start the timer the instant the pump engages (including pre-infusion), so a shot with an 8s pre-infusion often runs **30–35 seconds total**.'
-                            }
-                        ]
-                    }
-                ]
             };
-
-            const session2 = {
-                id: 'sess_system_arch',
-                title: 'Zero-Downtime Postgres Schema Migration',
-                updatedAt: now - 3600000,
-                messages: [
-                    {
-                        id: 'msg_301',
-                        role: 'user',
-                        content: 'What is the safest expand-and-contract pattern to split a `full_name` column into `first_name` and `last_name` on a 200M-row PostgreSQL table in production?',
-                        timestamp: now - 3600000
-                    },
-                    {
-                        id: 'msg_302',
-                        role: 'model',
-                        content: `To migrate a **200M-row PostgreSQL table** without acquiring an \`ACCESS EXCLUSIVE\` table lock or dropping writes, use the **4-Phase Expand & Contract** pattern:\n\n1. **Expand (DDL)**: Add nullable \`first_name\` and \`last_name\` columns. In Postgres 11+, adding nullable columns without volatile defaults is an instant metadata-only operation.\n2. **Dual-Write (Application)**: Update application code to write to both \`full_name\` and the new columns simultaneously.\n3. **Batched Backfill**: Run an idempotent background worker updating **5,000 rows per transaction** with a short \`pg_sleep(0.05)\` to avoid replication lag and autovacuum starvation.\n4. **Contract**: Switch reads to the new columns, drop dual-writes, and finally drop \`full_name\`.`,
-                        timestamp: now - 3550000
-                    }
-                ],
-                notes: [
-                    {
-                        id: 'note_401',
-                        sourceMessageId: 'msg_302',
-                        anchorText: 'without acquiring an ACCESS EXCLUSIVE table lock',
-                        color: 'sky',
-                        x: defaultX,
-                        y: 110,
-                        minimized: false,
-                        pinned: false,
-                        zIndex: 103,
-                        thread: [
-                            {
-                                role: 'user',
-                                content: 'Why does an ACCESS EXCLUSIVE lock cause downtime even if the DDL takes 50ms?'
-                            },
-                            {
-                                role: 'model',
-                                content: 'Because of **lock queuing**: if a long-running analytics \`SELECT\` holds an \`ACCESS SHARE\` lock, your DDL waits behind it—and **every new incoming SELECT/INSERT queues behind your waiting DDL**, stalling the entire app.'
-                            }
-                        ]
-                    }
-                ]
-            };
-
-            return [session1, session2];
+            el.addEventListener('touchstart', handler, { passive: true });
+            el.addEventListener('click', handler);
         }
 
-        function loadState() {
+        function copyTextToClipboard(text, successMsg = 'Copied to clipboard') {
+            if (!text) return;
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            textarea.setSelectionRange(0, textarea.value.length);
             try {
-                const rawSettings = localStorage.getItem(SETTINGS_KEY);
-                if (rawSettings) {
-                    const parsedSettings = JSON.parse(rawSettings);
-                    appSettings = {
-                        apiKey: parsedSettings.apiKey || '',
-                        model: parsedSettings.model || 'gemini-4-hydrogen'
-                    };
-                }
-
-                const raw = localStorage.getItem(STORAGE_KEY);
-                const savedActive = localStorage.getItem(ACTIVE_ID_KEY);
-                const savedSidebar = localStorage.getItem(LEFT_SIDEBAR_KEY);
-
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) {
-                        sessions = parsed.filter(s => s && typeof s === 'object' && Array.isArray(s.messages));
-                    }
-                }
-                if (!Array.isArray(sessions) || sessions.length === 0) {
-                    sessions = buildSampleSessions();
-                    activeSessionId = sessions[0].id;
-                    saveState();
-                } else {
-                    activeSessionId = sessions.some(s => s.id === savedActive) ? savedActive : sessions[0].id;
-                }
-
-                if (savedSidebar !== null && window.innerWidth >= 768) {
-                    isLeftSidebarOpen = savedSidebar === 'true';
-                }
+                document.execCommand('copy');
+                showToast(successMsg);
             } catch (err) {
-                console.warn('Resetting state after load error:', err);
-                sessions = buildSampleSessions();
-                activeSessionId = sessions[0].id;
-                saveState();
+                showToast('Unable to copy automatically');
             }
+            document.body.removeChild(textarea);
         }
 
-        function saveState() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-                localStorage.setItem(ACTIVE_ID_KEY, activeSessionId);
-                localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
-                if (window.innerWidth >= 768) {
-                    localStorage.setItem(LEFT_SIDEBAR_KEY, String(isLeftSidebarOpen));
-                }
-            } catch (err) {
-                console.warn('Could not persist state:', err);
-            }
-        }
-
-        function getActiveSession() {
-            return sessions.find(s => s.id === activeSessionId) || sessions[0];
-        }
-
-        function updateModelStatusPill() {
-            const dot = document.getElementById('model-status-dot');
-            const label = document.getElementById('model-status-label');
-            const hasKey = Boolean(appSettings.apiKey && appSettings.apiKey.trim());
-            const isLive = hasKey && appSettings.model !== 'demo';
-
-            if (isLive) {
-                dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
-                label.textContent = MODEL_LABELS[appSettings.model] || appSettings.model;
-            } else {
-                dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500';
-                label.textContent = hasKey ? 'Demo Mode' : 'Demo Mode (Add Key)';
-            }
-        }
-
-        // =========================================================================
-        // 2. GEMINI API CALLER WITH SMART BUILT-IN CONTEXTUAL FALLBACK
-        // =========================================================================
-        async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
+        async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
             try {
                 return await fetch(url, { ...options, signal: controller.signal });
             } catch (err) {
                 if (err.name === 'AbortError') {
-                    throw new Error(`Request timed out after ${Math.round(timeoutMs / 1000)}s — check your network or API key`);
+                    throw new Error(`Request timed out after ${Math.round(timeoutMs / 1000)}s`);
                 }
                 throw err;
             } finally {
@@ -849,71 +754,146 @@
             }
         }
 
-        async function queryGeminiOrFallback({ contents, systemInstruction, fallbackContext }) {
-            const userKey = (appSettings.apiKey || '').trim();
-            const selectedModel = appSettings.model || 'gemini-4-hydrogen';
+        function createDefaultSessions() {
+            const msg1Id = uid('msg');
+            const msg2Id = uid('msg');
+            const defaultRightX = Math.max(24, (typeof window !== 'undefined' ? window.innerWidth : 1200) - 348);
 
-            if (!userKey || selectedModel === 'demo') {
-                await new Promise(r => setTimeout(r, 450));
-                return generateContextualFallbackReply(fallbackContext);
-            }
-
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:generateContent?key=${encodeURIComponent(userKey)}`;
-            const payload = {
-                contents,
-                systemInstruction: {
-                    parts: [{ text: systemInstruction }]
+            return [
+                {
+                    id: uid('sess'),
+                    title: 'PostgreSQL Indexing & Query Plans',
+                    updatedAt: Date.now(),
+                    messages: [
+                        {
+                            id: msg1Id,
+                            role: 'user',
+                            content: 'How should I design composite indexes in PostgreSQL for a multi-tenant events table?'
+                        },
+                        {
+                            id: msg2Id,
+                            role: 'assistant',
+                            content: `For a multi-tenant \`events\` table, the column ordering inside a **composite B-tree index** determines whether PostgreSQL can satisfy both filtering and sorting without an extra sort step.\n\n### Recommended Column Order\n1. **Equality predicates first:** Start with \`tenant_id\` because every query filters on a single tenant with \`=\`.\n2. **Low-cardinality equality filters next:** Place columns like \`event_type\` or \`status\` before range filters.\n3. **Range or \`ORDER BY\` column last:** Put \`created_at DESC\` at the trailing edge so index scans return rows already sorted.\n\n\`\`\`sql\nCREATE INDEX CONCURRENTLY idx_events_tenant_type_created\nON events (tenant_id, event_type, created_at DESC);\n\`\`\`\n\n### Watch Out for Selectivity\nIf a query omits \`event_type\` and only filters by \`tenant_id\` and \`created_at\`, PostgreSQL can still use the leading prefix (\`tenant_id\`), though less efficiently than a dedicated \`(tenant_id, created_at DESC)\` index.`
+                        }
+                    ],
+                    notes: [
+                        {
+                            id: uid('note'),
+                            title: 'CONCURRENTLY lock check',
+                            color: 'yellow',
+                            anchorQuote: 'CREATE INDEX CONCURRENTLY idx_events_tenant_type_created',
+                            anchorMessageId: msg2Id,
+                            x: defaultRightX,
+                            y: 92,
+                            zIndex: 31,
+                            minimized: false,
+                            isGenerating: false,
+                            messages: [
+                                { role: 'user', content: 'Does CONCURRENTLY block writes on a live table?' },
+                                { role: 'assistant', content: 'No—`CREATE INDEX CONCURRENTLY` avoids taking a `SHARE` lock that blocks `INSERT`/`UPDATE`/`DELETE`. It builds the index in two table scans and only briefly waits for conflicting transactions to finish.' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: uid('sess'),
+                    title: 'Trip Itinerary: Kyoto in Autumn',
+                    updatedAt: Date.now() - 3600000,
+                    messages: [
+                        {
+                            id: uid('msg'),
+                            role: 'user',
+                            content: 'Give me a calm 2-day walking itinerary in eastern Kyoto.'
+                        },
+                        {
+                            id: uid('msg'),
+                            role: 'assistant',
+                            content: `### Day 1: Higashiyama & Philosopher's Path\n* **Morning:** Start early at **Nanzen-ji** aqueduct and sub-temples before crowds arrive.\n* **Midday:** Stroll north along the **Philosopher's Path** toward **Ginkaku-ji** (Silver Pavilion), stopping for matcha overlooking the moss garden.\n* **Evening:** Walk through **Gion Shirakawa** at dusk for lantern-lit canal views.\n\n### Day 2: Kiyomizu-dera to Yasaka\n* **Morning:** Climb **Sannenzaka** and **Ninenzaka** lanes to **Kiyomizu-dera**.\n* **Afternoon:** Relax in **Maruyama Park** and visit **Chion-in** temple.`
+                        }
+                    ],
+                    notes: []
                 }
-            };
-
-            const delays = [800];
-            for (let attempt = 0; attempt <= delays.length; attempt++) {
-                try {
-                    const response = await fetchWithTimeout(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    }, 25000);
-
-                    const data = await response.json().catch(() => ({}));
-                    if (!response.ok) {
-                        const apiErrMsg = data?.error?.message || `HTTP ${response.status}`;
-                        throw new Error(apiErrMsg);
-                    }
-
-                    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (text) return text;
-                    throw new Error('Empty response from Gemini');
-                } catch (err) {
-                    if (attempt < delays.length) {
-                        await new Promise(r => setTimeout(r, delays[attempt]));
-                    } else {
-                        showToast(`API Notice: ${err.message}`);
-                        return `> **Gemini API Error:** ${escapeHtml(err.message)}\n>\n> Check your API key or try switching to **Gemini 3.8 Flash** or **Gemini 3.5 Flash-Lite** in **Settings (⚙️)**.\n\n---\n\n${generateContextualFallbackReply(fallbackContext)}`;
-                    }
-                }
-            }
+            ];
         }
 
-        function generateContextualFallbackReply({ mode, userQuestion, anchorText, mainMessages }) {
-            const cleanAnchor = anchorText ? `"${anchorText.slice(0, 110)}${anchorText.length > 110 ? '...' : ''}"` : null;
-            const lastMain = [...(mainMessages || [])].reverse().find(m => m.role === 'model');
-            const topicHint = lastMain
-                ? lastMain.content.replace(/[#*`]/g, '').split('\n').find(l => l.trim().length > 15)?.slice(0, 120)
-                : 'the current discussion topic';
+        function loadState() {
+            try {
+                const rawSettings = localStorage.getItem(SETTINGS_KEY);
+                if (rawSettings) {
+                    const parsedSettings = JSON.parse(rawSettings);
+                    if (parsedSettings && typeof parsedSettings === 'object') {
+                        appSettings = { ...appSettings, ...parsedSettings };
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not load settings:', e);
+            }
 
-            if (mode === 'postit') {
-                return `Here is a quick clarification${cleanAnchor ? ` regarding ${cleanAnchor}` : ''}:\n\n- **Core takeaway:** In the context of *${topicHint || 'your main thread'}*, **${userQuestion.replace(/\?$/, '')}** acts as a key safeguard so edge cases don't cascade.\n- **Practical rule of thumb:** Keep this isolated as a side detail unless you decide to promote it into the primary architecture.\n\n*(Demo Mode active — click **Settings ⚙️** to paste your Gemini API key for live answers.)*`;
+            try {
+                const rawSessions = localStorage.getItem(STORAGE_KEY);
+                if (rawSessions) {
+                    const parsed = JSON.parse(rawSessions);
+                    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].id && Array.isArray(parsed[0].messages)) {
+                        sessions = parsed;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not load sessions:', e);
+            }
+
+            if (!Array.isArray(sessions) || sessions.length === 0) {
+                sessions = createDefaultSessions();
+            }
+
+            const savedActive = localStorage.getItem(ACTIVE_ID_KEY);
+            activeSessionId = sessions.some(s => s.id === savedActive) ? savedActive : sessions[0].id;
+
+            const savedSidebar = localStorage.getItem(LEFT_SIDEBAR_KEY);
+            if (savedSidebar !== null) {
+                isLeftSidebarOpen = savedSidebar === 'true';
             } else {
-                return `### Structured Breakdown: ${userQuestion}\n\nBuilding directly on our discussion:\n\n1. **Core Principle**: Keep the primary architecture clean, modular, and easy to reason about before introducing premature optimizations.\n2. **Key Trade-offs**: Balance latency, operational complexity, and maintainability depending on your expected scale.\n3. **Next Step**: Highlight any specific phrase in this response to pop open a **📌 Post-It** clarifier in the right margin without cluttering this thread.\n\n*(Demo Mode active — click the **Demo Mode** pill at the top to connect your Gemini API key.)*`;
+                isLeftSidebarOpen = window.innerWidth >= 768;
             }
         }
 
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+                if (activeSessionId) {
+                    localStorage.setItem(ACTIVE_ID_KEY, activeSessionId);
+                }
+                localStorage.setItem(LEFT_SIDEBAR_KEY, String(isLeftSidebarOpen));
+                localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+            } catch (e) {
+                console.warn('Save state warning:', e);
+            }
+        }
+
+        function getActiveSession() {
+            let sess = sessions.find(s => s.id === activeSessionId);
+            if (!sess && sessions.length > 0) {
+                sess = sessions[0];
+                activeSessionId = sess.id;
+            }
+            if (sess && !Array.isArray(sess.notes)) sess.notes = [];
+            if (sess && !Array.isArray(sess.messages)) sess.messages = [];
+            return sess;
+        }
+
+        function renderAll() {
+            try { applyLeftSidebarUI(); } catch (e) { console.error(e); }
+            try { updateModelStatusPill(); } catch (e) { console.error(e); }
+            try { renderRecentThreads(); } catch (e) { console.error(e); }
+            try { renderMainThread(); } catch (e) { console.error(e); }
+            try { renderPostItNotes(); } catch (e) { console.error(e); }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
         // =========================================================================
-        // 3. LEFT SIDEBAR (GEMINI NAVIGATION RAIL)
+        // 2. COLLAPSIBLE LEFT GEMINI SIDEBAR
         // =========================================================================
-        function toggleLeftSidebar(forceState = null) {
-            isLeftSidebarOpen = forceState !== null ? forceState : !isLeftSidebarOpen;
+        function toggleLeftSidebar(forceState) {
+            isLeftSidebarOpen = typeof forceState === 'boolean' ? forceState : !isLeftSidebarOpen;
             saveState();
             applyLeftSidebarUI();
         }
@@ -922,80 +902,85 @@
             const sidebar = document.getElementById('left-sidebar');
             const backdrop = document.getElementById('left-sidebar-backdrop');
             const headerMenuBtn = document.getElementById('header-menu-btn');
+            if (!sidebar) return;
+
             const isMobile = window.innerWidth < 768;
 
             if (isLeftSidebarOpen) {
                 sidebar.style.width = '268px';
                 sidebar.classList.remove('-translate-x-full');
-                if (isMobile) {
-                    backdrop.classList.remove('hidden');
-                    if (headerMenuBtn) headerMenuBtn.classList.remove('hidden');
-                } else {
-                    backdrop.classList.add('hidden');
-                    if (headerMenuBtn) headerMenuBtn.classList.add('hidden');
+                if (backdrop) {
+                    if (isMobile) backdrop.classList.remove('hidden');
+                    else backdrop.classList.add('hidden');
+                }
+                if (headerMenuBtn) {
+                    headerMenuBtn.classList.toggle('md:hidden', true);
                 }
             } else {
                 if (isMobile) {
                     sidebar.style.width = '268px';
                     sidebar.classList.add('-translate-x-full');
-                    backdrop.classList.add('hidden');
                 } else {
                     sidebar.style.width = '0px';
                     sidebar.classList.remove('-translate-x-full');
-                    backdrop.classList.add('hidden');
                 }
-                if (headerMenuBtn) headerMenuBtn.classList.remove('hidden');
+                if (backdrop) backdrop.classList.add('hidden');
+                if (headerMenuBtn) {
+                    headerMenuBtn.classList.remove('md:hidden');
+                }
             }
         }
 
         function renderRecentThreads() {
             const listEl = document.getElementById('recent-threads-list');
-            const query = (document.getElementById('thread-search-input')?.value || '').trim().toLowerCase();
+            if (!listEl) return;
 
-            const filtered = query
-                ? sessions.filter(s =>
-                    s.title.toLowerCase().includes(query) ||
-                    s.messages.some(m => m.content.toLowerCase().includes(query)) ||
-                    (s.notes || []).some(n => n.thread.some(t => t.content.toLowerCase().includes(query)))
-                )
-                : sessions;
+            const query = (document.getElementById('thread-search-input')?.value || '').trim().toLowerCase();
+            const filtered = sessions.filter(s => {
+                if (!query) return true;
+                const titleMatch = (s.title || '').toLowerCase().includes(query);
+                const msgMatch = (s.messages || []).some(m => (m.content || '').toLowerCase().includes(query));
+                const noteMatch = (s.notes || []).some(n =>
+                    (n.title || '').toLowerCase().includes(query) ||
+                    (n.messages || []).some(m => (m.content || '').toLowerCase().includes(query))
+                );
+                return titleMatch || msgMatch || noteMatch;
+            });
 
             if (filtered.length === 0) {
-                listEl.innerHTML = `<div class="px-3 py-3 text-xs text-[#444746]/75">No matching threads</div>`;
+                listEl.innerHTML = `<div class="px-3 py-4 text-xs text-[#444746]/70">No matching threads</div>`;
                 return;
             }
 
             listEl.innerHTML = filtered.map(sess => {
                 const isActive = sess.id === activeSessionId;
-                const noteCount = sess.notes?.length || 0;
+                const noteCount = (sess.notes || []).length;
                 return `
                     <div onclick="switchSession('${sess.id}')"
-                        class="group flex items-center justify-between gap-2 px-3 py-2 rounded-full cursor-pointer text-[13px] transition-colors ${
-                            isActive
-                                ? 'bg-[#d3e3fd] text-[#041e49] font-medium'
-                                : 'text-[#1f1f1f] hover:bg-[#e3e8ee]'
-                        }">
-                        <div class="flex items-center gap-2.5 min-w-0">
+                        class="group flex items-center justify-between gap-2 px-3 py-2 rounded-full cursor-pointer transition-colors ${isActive ? 'bg-[#d3e3fd] text-[#041e49] font-medium' : 'hover:bg-[#e3e8ee] text-[#1f1f1f]'}">
+                        <div class="flex items-center gap-2.5 min-w-0 flex-1">
                             <i data-lucide="message-square" class="w-4 h-4 shrink-0 ${isActive ? 'text-[#0b57d0]' : 'text-[#444746]'}"></i>
-                            <span class="truncate">${escapeHtml(sess.title)}</span>
+                            <span class="truncate text-[13px]">${escapeHtml(sess.title || 'Untitled chat')}</span>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
-                            ${noteCount > 0 ? `<span class="text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/75 text-[#041e49]' : 'bg-amber-100 text-amber-900'} font-mono">${noteCount}📌</span>` : ''}
+                            ${noteCount > 0 ? `<span class="px-1.5 py-0.2 rounded-full bg-amber-200/90 text-amber-950 text-[10px] font-semibold">📌${noteCount}</span>` : ''}
                             ${sessions.length > 1 ? `
-                                <button onclick="deleteSession(event, '${sess.id}')" title="Delete thread"
+                                <button onclick="event.stopPropagation(); deleteSession('${sess.id}')" title="Delete thread"
                                     class="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-black/10 text-[#444746] transition-opacity">
-                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                 </button>
                             ` : ''}
                         </div>
                     </div>
                 `;
             }).join('');
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function createNewSession() {
             const newSess = {
-                id: 'sess_' + Date.now(),
+                id: uid('sess'),
                 title: 'New chat',
                 updatedAt: Date.now(),
                 messages: [],
@@ -1004,20 +989,21 @@
             sessions.unshift(newSess);
             activeSessionId = newSess.id;
             saveState();
-            if (window.innerWidth < 768) toggleLeftSidebar(false);
             renderAll();
-            document.getElementById('main-prompt-input').focus();
+            if (window.innerWidth < 768) toggleLeftSidebar(false);
+            focusElementSafely('main-prompt-input');
         }
 
         function switchSession(id) {
+            if (!sessions.some(s => s.id === id)) return;
             activeSessionId = id;
+            hideTetherLine();
             saveState();
-            if (window.innerWidth < 768) toggleLeftSidebar(false);
             renderAll();
+            if (window.innerWidth < 768) toggleLeftSidebar(false);
         }
 
-        function deleteSession(event, id) {
-            event.stopPropagation();
+        function deleteSession(id) {
             if (sessions.length <= 1) return;
             sessions = sessions.filter(s => s.id !== id);
             if (activeSessionId === id) {
@@ -1028,1072 +1014,805 @@
             showToast('Thread deleted');
         }
 
-        function resetDemoWorkspace() {
-            sessions = buildSampleSessions();
-            activeSessionId = sessions[0].id;
-            saveState();
-            renderAll();
-            showToast('Restored sample threads & Post-It notes');
-        }
-
         // =========================================================================
-        // 4. MAIN THREAD RENDERING & MESSAGING
+        // 3. MAIN CONVERSATION STREAM
         // =========================================================================
         function renderMainThread() {
             const container = document.getElementById('main-thread-container');
-            const session = getActiveSession();
+            const sess = getActiveSession();
+            if (!container || !sess) return;
 
-            if (session.messages.length === 0) {
+            if (sess.messages.length === 0) {
                 container.innerHTML = `
-                    <div class="pt-12 sm:pt-20 pb-8 space-y-8">
+                    <div class="pt-12 sm:pt-20 pb-8 space-y-6">
                         <div class="space-y-2">
-                            <h1 class="font-display text-3xl sm:text-[42px] font-semibold tracking-tight leading-tight">
+                            <h1 class="font-display text-3xl sm:text-4xl font-semibold tracking-tight">
                                 <span class="gemini-sparkle">Hello there</span>
                             </h1>
-                            <p class="font-display text-xl sm:text-2xl text-[#c4c7c5] font-medium">
-                                Keep your main thread clean. Park tangents on Post-Its.
+                            <p class="text-lg sm:text-xl text-[#444746] font-normal">
+                                Keep your main thread clean—pop open <span class="font-medium text-[#1f1f1f]">📌 Post-Its</span> in the right margin for side tangents.
                             </p>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                            <button onclick="sendMainMessage('Explain how WebSockets, Server-Sent Events (SSE), and Long Polling differ for real-time apps.')"
-                                class="p-4 rounded-2xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-left transition-colors flex flex-col justify-between h-32 group">
-                                <p class="text-[13px] text-[#1f1f1f] leading-snug">Compare WebSockets, SSE, and Long Polling for real-time apps</p>
-                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center self-end shadow-2xs">
-                                    <i data-lucide="compass" class="w-4 h-4 text-[#1f1f1f]"></i>
-                                </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                            <button onclick="useStarterPrompt('Explain how WebSockets differ from Server-Sent Events (SSE) with a clean comparison table.')"
+                                class="text-left p-4 rounded-2xl bg-[#f0f4f9] hover:bg-[#e3e8ee] transition-colors space-y-1.5">
+                                <div class="text-xs font-semibold text-[#1a73e8]">Architecture</div>
+                                <div class="text-sm text-[#1f1f1f] font-medium">WebSockets vs. Server-Sent Events</div>
                             </button>
-
-                            <button onclick="sendMainMessage('Give me a concise mental model for OAuth 2.0 Authorization Code Flow with PKCE.')"
-                                class="p-4 rounded-2xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-left transition-colors flex flex-col justify-between h-32 group">
-                                <p class="text-[13px] text-[#1f1f1f] leading-snug">Mental model for OAuth 2.0 Authorization Code Flow with PKCE</p>
-                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center self-end shadow-2xs">
-                                    <i data-lucide="shield-check" class="w-4 h-4 text-[#1f1f1f]"></i>
-                                </div>
-                            </button>
-
-                            <button onclick="sendMainMessage('Outline a 4-week study plan to learn Rust ownership, lifetimes, and async Tokio.')"
-                                class="p-4 rounded-2xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-left transition-colors flex flex-col justify-between h-32 group">
-                                <p class="text-[13px] text-[#1f1f1f] leading-snug">4-week study plan for Rust ownership, lifetimes & async Tokio</p>
-                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center self-end shadow-2xs">
-                                    <i data-lucide="code-2" class="w-4 h-4 text-[#1f1f1f]"></i>
-                                </div>
+                            <button onclick="useStarterPrompt('Help me outline a 4-week study plan to learn Rust ownership, lifetimes, and async programming.')"
+                                class="text-left p-4 rounded-2xl bg-[#f0f4f9] hover:bg-[#e3e8ee] transition-colors space-y-1.5">
+                                <div class="text-xs font-semibold text-[#1a73e8]">Learning Plan</div>
+                                <div class="text-sm text-[#1f1f1f] font-medium">4-week Rust ownership & async roadmap</div>
                             </button>
                         </div>
                     </div>
                 `;
-                lucide.createIcons();
                 return;
             }
 
-            container.innerHTML = session.messages.map(msg => {
-                const isUser = msg.role === 'user';
-                const linkedNotes = session.notes.filter(n => n.sourceMessageId === msg.id);
-
-                if (isUser) {
+            container.innerHTML = sess.messages.map((msg) => {
+                if (msg.role === 'user') {
                     return `
                         <div id="${msg.id}" class="flex justify-end">
-                            <div class="max-w-[85%] sm:max-w-[75%] rounded-3xl rounded-tr-md bg-[#f0f4f9] px-5 py-3.5 text-[15px] text-[#1f1f1f] leading-relaxed whitespace-pre-wrap">
-                                ${escapeHtml(msg.content)}
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    const htmlContent = formatMarkdownWithCopy(msg.content);
-                    const linkedBadge = linkedNotes.length > 0
-                        ? `<button onclick="focusNotesForMessage('${msg.id}')"
-                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#fef7cd] hover:bg-[#fdeea2] border border-amber-300/70 text-amber-950 text-[11px] font-medium transition-colors">
-                               <span>📌 ${linkedNotes.length} note${linkedNotes.length > 1 ? 's' : ''}</span>
-                           </button>`
-                        : '';
-
-                    return `
-                        <div id="${msg.id}" data-message-id="${msg.id}" class="group relative flex items-start gap-3.5 sm:gap-4 p-2 -mx-2 transition-colors">
-                            <!-- Gemini Sparkle Avatar -->
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 select-none">
-                                <span class="gemini-sparkle text-xl leading-none font-bold">✦</span>
-                            </div>
-
-                            <!-- Borderless Clean AI Response Body -->
-                            <div class="flex-1 min-w-0 space-y-2.5">
-                                ${msg.promotedFromNote ? `
-                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-medium">
-                                        <span>📌 Promoted takeaway from Post-It</span>
-                                    </div>
-                                ` : ''}
-
-                                <div class="markdown-body selectable-ai-content">${htmlContent}</div>
-
-                                <!-- Subtle Action Bar under AI Reply -->
-                                <div class="flex items-center gap-1.5 pt-1 opacity-85 group-hover:opacity-100 transition-opacity">
-                                    <button onclick="spawnPostItFromMessage('${msg.id}')"
-                                        title="Pop open a draggable Post-It clarifier anchored to this reply"
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full hover:bg-[#fef7cd] text-[#444746] hover:text-amber-950 text-xs font-medium transition-colors">
-                                        <span>📌 Post-It</span>
-                                    </button>
-
-                                    <button onclick="copyRawText('${msg.id}')"
-                                        title="Copy response"
-                                        class="p-1.5 rounded-full hover:bg-[#f0f4f9] text-[#444746] hover:text-[#1f1f1f] transition-colors">
-                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                                    </button>
-
-                                    ${linkedBadge}
-                                </div>
-                            </div>
+                            <div class="max-w-[85%] sm:max-w-[78%] rounded-3xl rounded-tr-md bg-[#f0f4f9] px-5 py-3.5 text-[#1f1f1f] text-[15px] leading-relaxed whitespace-pre-wrap">${escapeHtml(msg.content)}</div>
                         </div>
                     `;
                 }
-            }).join('');
 
-            lucide.createIcons();
+                const linkedNotes = (sess.notes || []).filter(n => n.anchorMessageId === msg.id);
+                return `
+                    <div id="${msg.id}" data-message-id="${msg.id}" class="group flex items-start gap-3.5 sm:gap-4 transition-all">
+                        <div class="w-8 h-8 rounded-full bg-[#f0f4f9] flex items-center justify-center shrink-0 mt-0.5 select-none">
+                            <span class="gemini-sparkle text-base font-bold">✦</span>
+                        </div>
+                        <div class="flex-1 min-w-0 space-y-2.5">
+                            <div class="markdown-body">${renderMarkdown(msg.content)}</div>
+
+                            <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                                <button onclick="spawnPostItNote({ anchorMessageId: '${msg.id}', title: 'Side question' })"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef7cd]/85 hover:bg-[#fdeea2] border border-amber-300/80 text-amber-950 text-xs font-medium transition-colors">
+                                    <span>📌 Clarify on Post-It</span>
+                                </button>
+                                <button onclick="copyMessageText('${msg.id}')"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full hover:bg-[#f0f4f9] text-[#444746] text-xs transition-colors">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                    <span>Copy</span>
+                                </button>
+                                ${linkedNotes.map(n => `
+                                    <button onclick="focusPostItNote('${n.id}')"
+                                        onmouseenter="highlightTether('${n.id}')" onmouseleave="hideTetherLine()"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100/80 hover:bg-amber-200 text-amber-950 text-[11px] font-medium transition-colors">
+                                        <span>📌 ${escapeHtml(n.title)}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('') + (isMainGenerating ? `
+                <div class="flex items-start gap-3.5 sm:gap-4">
+                    <div class="w-8 h-8 rounded-full bg-[#f0f4f9] flex items-center justify-center shrink-0 mt-0.5">
+                        <span class="gemini-sparkle text-base font-bold">✦</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 py-3">
+                        <span class="w-2 h-2 rounded-full bg-[#4285f4] dot-1"></span>
+                        <span class="w-2 h-2 rounded-full bg-[#9b72cb] dot-2"></span>
+                        <span class="w-2 h-2 rounded-full bg-[#d96570] dot-3"></span>
+                    </div>
+                </div>
+            ` : '');
+
+            highlightCodeBlocks(container);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        async function sendMainMessage(overrideText = null) {
-            if (isMainGenerating) return;
+        function useStarterPrompt(text) {
             const input = document.getElementById('main-prompt-input');
-            const text = (overrideText !== null ? overrideText : input.value).trim();
+            if (!input) return;
+            input.value = text;
+            sendMainMessage();
+        }
+
+        function copyMessageText(messageId) {
+            const sess = getActiveSession();
+            const msg = sess?.messages.find(m => m.id === messageId);
+            if (msg) copyTextToClipboard(msg.content, 'Response copied');
+        }
+
+        async function sendMainMessage() {
+            const input = document.getElementById('main-prompt-input');
+            if (!input || isMainGenerating) return;
+            const text = input.value.trim();
             if (!text) return;
 
-            const session = getActiveSession();
-            if (overrideText === null) {
-                input.value = '';
-                autoResizeTextarea(input);
+            const sess = getActiveSession();
+            if (!sess) return;
+
+            if (sess.messages.length === 0 && (sess.title === 'New chat' || !sess.title)) {
+                sess.title = text.length > 42 ? text.slice(0, 42) + '…' : text;
             }
 
-            if (session.messages.length === 0) {
-                session.title = text.length > 38 ? text.slice(0, 38) + '...' : text;
-            }
-            session.updatedAt = Date.now();
-
-            session.messages.push({
-                id: 'msg_' + Date.now(),
+            sess.messages.push({
+                id: uid('msg'),
                 role: 'user',
-                content: text,
-                timestamp: Date.now()
+                content: text
             });
+            sess.updatedAt = Date.now();
+            input.value = '';
+            input.style.height = 'auto';
+            isMainGenerating = true;
 
             saveState();
             renderRecentThreads();
             renderMainThread();
-            appendMainLoadingBubble();
-
-            isMainGenerating = true;
-            document.getElementById('main-send-btn').disabled = true;
-
-            const contents = session.messages.map(m => ({
-                role: m.role === 'model' ? 'model' : 'user',
-                parts: [{ text: m.content }]
-            }));
-
-            const systemInstruction = `You are Google Gemini. Respond in a clean, helpful, authoritative, and well-structured style using clear Markdown headings, concise bullet points, and code blocks where helpful. Keep the main thread crisp and focused.`;
+            scrollMainToBottom();
 
             try {
-                const reply = await queryGeminiOrFallback({
-                    contents,
-                    systemInstruction,
-                    fallbackContext: {
-                        mode: 'main',
-                        userQuestion: text,
-                        mainMessages: session.messages
-                    }
+                const reply = await queryGeminiOrFallback(sess.messages, null);
+                sess.messages.push({
+                    id: uid('msg'),
+                    role: 'assistant',
+                    content: reply
                 });
-
-                session.messages.push({
-                    id: 'msg_' + (Date.now() + 1),
-                    role: 'model',
-                    content: reply,
-                    timestamp: Date.now()
+                sess.updatedAt = Date.now();
+            } catch (err) {
+                sess.messages.push({
+                    id: uid('msg'),
+                    role: 'assistant',
+                    content: `⚠️ **API Error:** ${err.message}\n\nCheck your API key or model in **Settings (⚙️)**.`
                 });
-                saveState();
             } finally {
                 isMainGenerating = false;
-                document.getElementById('main-send-btn').disabled = false;
+                saveState();
+                renderRecentThreads();
                 renderMainThread();
-                const scrollArea = document.getElementById('main-scroll-area');
-                scrollArea.scrollTop = scrollArea.scrollHeight;
+                scrollMainToBottom();
             }
         }
 
-        function appendMainLoadingBubble() {
-            const container = document.getElementById('main-thread-container');
-            const loader = document.createElement('div');
-            loader.className = 'flex items-center gap-4 p-2';
-            loader.innerHTML = `
-                <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0">
-                    <span class="gemini-sparkle text-xl font-bold animate-pulse">✦</span>
-                </div>
-                <div class="flex items-center gap-1.5 py-2">
-                    <span class="w-2 h-2 rounded-full bg-blue-500 dot-1"></span>
-                    <span class="w-2 h-2 rounded-full bg-purple-500 dot-2"></span>
-                    <span class="w-2 h-2 rounded-full bg-rose-400 dot-3"></span>
-                </div>
-            `;
-            container.appendChild(loader);
+        function scrollMainToBottom() {
             const scrollArea = document.getElementById('main-scroll-area');
-            scrollArea.scrollTop = scrollArea.scrollHeight;
+            if (scrollArea) {
+                requestAnimationFrame(() => {
+                    scrollArea.scrollTop = scrollArea.scrollHeight;
+                });
+            }
         }
 
         // =========================================================================
-        // 5. FLOATING DRAGGABLE POST-IT NOTES (RIGHT MARGIN)
+        // 4. FLOATING DRAGGABLE POST-IT CLARIFIERS
         // =========================================================================
-        function spawnPostItNote({ sourceMessageId = null, anchorText = '', initialQuestion = '' }) {
-            const session = getActiveSession();
-            if (!areNotesVisible) {
-                areNotesVisible = true;
-            }
+        function spawnPostItNote({ anchorQuote = '', anchorMessageId = null, title = '' } = {}) {
+            const sess = getActiveSession();
+            if (!sess) return;
 
-            // Pick a staggered position along the right side margin
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-            const noteWidth = Math.min(324, vw - 32);
-            const openCount = session.notes.length;
+            areNotesVisible = true;
+            const existingCount = sess.notes.length;
+            const noteWidth = Math.min(324, window.innerWidth - 28);
+            const defaultX = Math.max(14, window.innerWidth - noteWidth - 24 - (existingCount % 3) * 18);
+            const defaultY = Math.min(Math.max(76, 86 + (existingCount % 5) * 44), Math.max(90, window.innerHeight - 360));
 
-            const colors = ['yellow', 'mint', 'sky', 'rose'];
-            const chosenColor = colors[openCount % colors.length];
+            const colorKeys = Object.keys(NOTE_THEMES);
+            const chosenColor = colorKeys[existingCount % colorKeys.length];
+            const derivedTitle = title || (anchorQuote ? anchorQuote.slice(0, 26) + (anchorQuote.length > 26 ? '…' : '') : `Side Note #${existingCount + 1}`);
 
-            const targetX = Math.max(16, vw - noteWidth - 24 - ((openCount % 3) * 14));
-            const targetY = Math.min(vh - 340, 84 + ((openCount % 4) * 44));
-
-            topZIndex += 1;
             const newNote = {
-                id: 'note_' + Date.now(),
-                sourceMessageId,
-                anchorText: anchorText.trim(),
+                id: uid('note'),
+                title: derivedTitle,
                 color: chosenColor,
-                x: targetX,
-                y: Math.max(72, targetY),
+                anchorQuote: anchorQuote || '',
+                anchorMessageId: anchorMessageId || null,
+                x: defaultX,
+                y: defaultY,
+                zIndex: ++topZIndex,
                 minimized: false,
-                pinned: false,
-                zIndex: topZIndex,
-                thread: []
+                isGenerating: false,
+                messages: []
             };
 
-            session.notes.push(newNote);
+            sess.notes.push(newNote);
             saveState();
-            renderRecentThreads();
             renderMainThread();
             renderPostItNotes();
 
-            // Focus the note's input box immediately
-            setTimeout(() => {
-                const inputEl = document.getElementById(`note-input-${newNote.id}`);
-                if (inputEl) {
-                    if (initialQuestion) inputEl.value = initialQuestion;
-                    inputEl.focus();
-                }
-                drawTetherForNote(newNote.id);
-            }, 40);
-        }
-
-        function spawnPostItFromMessage(messageId) {
-            const session = getActiveSession();
-            const msg = session.messages.find(m => m.id === messageId);
-            if (!msg) return;
-            const cleanText = msg.content.replace(/[#*`>]/g, '').trim();
-            const snippet = cleanText.length > 140 ? cleanText.slice(0, 140) + '...' : cleanText;
-            spawnPostItNote({
-                sourceMessageId: messageId,
-                anchorText: snippet
-            });
-        }
-
-        function createPostItFromSelection() {
-            if (!currentSelectionData) return;
-            const { text, sourceMessageId } = currentSelectionData;
-            document.getElementById('selection-tooltip').classList.add('hidden');
-            window.getSelection()?.removeAllRanges();
-            spawnPostItNote({
-                sourceMessageId,
-                anchorText: text
-            });
-            currentSelectionData = null;
+            setTimeout(() => focusElementSafely(`note-input-${newNote.id}`), 60);
         }
 
         function renderPostItNotes() {
             const layer = document.getElementById('postits-layer');
-            const session = getActiveSession();
-            const notes = session.notes || [];
+            const countPill = document.getElementById('notes-count-pill');
+            const toggleBtn = document.getElementById('toggle-notes-visibility-btn');
+            const sess = getActiveSession();
+            if (!layer || !sess) return;
 
-            document.getElementById('notes-count-pill').textContent = notes.length;
-            const visBtn = document.getElementById('toggle-notes-visibility-btn');
-            visBtn.classList.toggle('opacity-60', !areNotesVisible);
+            const notes = sess.notes || [];
+            if (countPill) countPill.textContent = String(notes.length);
+            if (toggleBtn) {
+                toggleBtn.classList.toggle('ring-2', !areNotesVisible && notes.length > 0);
+                toggleBtn.classList.toggle('ring-amber-400', !areNotesVisible && notes.length > 0);
+            }
 
             if (!areNotesVisible || notes.length === 0) {
                 layer.innerHTML = '';
-                clearTether();
+                hideTetherLine();
                 return;
             }
 
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-            const cardWidth = Math.min(324, vw - 24);
+            const maxW = Math.min(324, window.innerWidth - 24);
 
-            layer.innerHTML = notes.map(note => {
+            layer.innerHTML = notes.map((note) => {
                 const theme = NOTE_THEMES[note.color] || NOTE_THEMES.yellow;
-                // Keep within viewport bounds
-                const clampedX = Math.max(12, Math.min(vw - cardWidth - 12, note.x));
-                const clampedY = Math.max(68, Math.min(vh - (note.minimized ? 56 : 220), note.y));
-                const isGenerating = generatingNoteIds.has(note.id);
+                const clampedX = Math.min(Math.max(12, note.x ?? (window.innerWidth - maxW - 24)), Math.max(12, window.innerWidth - maxW - 12));
+                const clampedY = Math.min(Math.max(68, note.y ?? 92), Math.max(76, window.innerHeight - 120));
 
-                const colorDotsHtml = Object.keys(NOTE_THEMES).map(cKey => {
-                    const cTheme = NOTE_THEMES[cKey];
-                    const activeRing = note.color === cKey ? 'ring-2 ring-black/40 scale-110' : 'opacity-75 hover:opacity-100';
-                    return `<button type="button" onclick="changeNoteColor('${note.id}', '${cKey}')" title="${cKey} note"
-                        style="background-color: ${cTheme.dot};"
-                        class="w-3 h-3 rounded-full transition-transform ${activeRing}"></button>`;
-                }).join('');
-
-                const anchorHtml = note.anchorText ? `
-                    <div onclick="scrollToSourceMessage('${note.sourceMessageId}')"
-                         title="Click to scroll to source in main thread"
-                         style="background-color: ${theme.quoteBg}; border-left: 3px solid ${theme.quoteBorder};"
-                         class="mx-3 mt-2.5 px-2.5 py-1.5 rounded-r-lg text-[11px] text-slate-700 italic line-clamp-2 cursor-pointer hover:brightness-95 transition">
-                        "${escapeHtml(note.anchorText)}"
-                    </div>
-                ` : '';
-
-                const threadHtml = note.thread.length === 0
-                    ? `<div class="px-3.5 py-4 text-center text-xs text-slate-600/90">
-                           Ask a quick clarifying question below—it stays neatly on this sticky note.
-                       </div>`
-                    : note.thread.map(turn => {
-                        if (turn.role === 'user') {
-                            return `
-                                <div class="bg-black/[0.05] rounded-xl px-3 py-2 text-xs font-medium text-slate-900">
-                                    ${escapeHtml(turn.content)}
+                if (note.minimized) {
+                    return `
+                        <div id="postit-${note.id}"
+                            style="left: ${clampedX}px; top: ${clampedY}px; z-index: ${note.zIndex || 31}; width: 220px;"
+                            onmouseenter="highlightTether('${note.id}')" onmouseleave="hideTetherLine()"
+                            class="postit-card pointer-events-auto fixed rounded-2xl border ${theme.border} ${theme.bg} overflow-hidden">
+                            <div onpointerdown="startDragPostIt(event, '${note.id}')"
+                                class="postit-header px-3 py-2 ${theme.header} flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <span class="text-xs">📌</span>
+                                    <span class="text-xs font-semibold text-slate-900 truncate">${escapeHtml(note.title)}</span>
                                 </div>
-                            `;
-                        } else {
-                            return `
-                                <div class="note-markdown text-slate-800 px-0.5">
-                                    ${marked.parse(turn.content)}
-                                </div>
-                            `;
-                        }
-                    }).join('');
-
-                const loadingHtml = isGenerating ? `
-                    <div class="flex items-center gap-1.5 py-1.5 px-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-slate-700 dot-1"></span>
-                        <span class="w-1.5 h-1.5 rounded-full bg-slate-700 dot-2"></span>
-                        <span class="w-1.5 h-1.5 rounded-full bg-slate-700 dot-3"></span>
-                    </div>
-                ` : '';
-
-                const hasAssistantReply = note.thread.some(t => t.role === 'model');
-
-                return `
-                    <div id="${note.id}"
-                        onmouseenter="drawTetherForNote('${note.id}')"
-                        onmouseleave="clearTether()"
-                        onmousedown="bringNoteToFront('${note.id}')"
-                        style="left: ${clampedX}px; top: ${clampedY}px; width: ${cardWidth}px; z-index: ${note.zIndex}; background-color: ${theme.bg}; border-color: ${theme.border};"
-                        class="postit-card pointer-events-auto fixed rounded-2xl border flex flex-col overflow-hidden">
-
-                        <!-- Draggable Top Header Bar -->
-                        <div onpointerdown="startDragNote(event, '${note.id}')"
-                            style="background-color: ${theme.header}; border-bottom: 1px solid ${theme.border};"
-                            class="postit-header px-3 py-2 flex items-center justify-between gap-2">
-
-                            <div class="flex items-center gap-1.5">
-                                <i data-lucide="grip-horizontal" class="w-3.5 h-3.5 text-slate-600/70"></i>
-                                <div class="flex items-center gap-1 ml-0.5" onpointerdown="event.stopPropagation()">
-                                    ${colorDotsHtml}
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <button type="button" onclick="event.stopPropagation(); toggleMinimizePostIt('${note.id}')" title="Expand Post-It"
+                                        class="p-1 rounded-lg hover:bg-black/10 text-slate-700">
+                                        <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button type="button" onclick="event.stopPropagation(); deletePostIt('${note.id}')" title="Close Post-It"
+                                        class="p-1 rounded-lg hover:bg-black/10 text-slate-700">
+                                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+                    `;
+                }
 
-                            <div class="flex items-center gap-0.5" onpointerdown="event.stopPropagation()">
-                                <!-- Pin / Unpin -->
-                                <button onclick="togglePinNote('${note.id}')" title="${note.pinned ? 'Unpin note' : 'Pin note on top'}"
-                                    class="p-1 rounded-lg hover:bg-black/10 text-slate-700 transition-colors ${note.pinned ? 'bg-black/10 text-slate-950' : 'opacity-65'}">
-                                    <i data-lucide="pin" class="w-3.5 h-3.5 ${note.pinned ? 'fill-current' : ''}"></i>
+                return `
+                    <div id="postit-${note.id}"
+                        onmousedown="bringPostItToFront('${note.id}')"
+                        onmouseenter="highlightTether('${note.id}')" onmouseleave="hideTetherLine()"
+                        style="left: ${clampedX}px; top: ${clampedY}px; z-index: ${note.zIndex || 31}; width: ${maxW}px;"
+                        class="postit-card pointer-events-auto fixed rounded-2xl border ${theme.border} ${theme.bg} flex flex-col max-h-[68vh]">
+
+                        <!-- Draggable Post-It Header -->
+                        <div onpointerdown="startDragPostIt(event, '${note.id}')"
+                            class="postit-header px-3.5 py-2.5 ${theme.header} border-b border-black/[0.06] flex items-center justify-between gap-2 rounded-t-2xl">
+                            <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                                <span class="text-xs shrink-0">📌</span>
+                                <input type="text" value="${escapeHtml(note.title)}"
+                                    onpointerdown="event.stopPropagation()"
+                                    onchange="renamePostIt('${note.id}', this.value)"
+                                    class="ipad-safe-input bg-transparent font-semibold text-xs text-slate-900 truncate w-full focus:outline-none focus:bg-white/60 rounded px-1" />
+                            </div>
+
+                            <!-- Color Swatches & Window Controls -->
+                            <div class="flex items-center gap-1 shrink-0" onpointerdown="event.stopPropagation()">
+                                ${Object.entries(NOTE_THEMES).map(([cKey, cVal]) => `
+                                    <button type="button" onclick="changePostItColor('${note.id}', '${cKey}')" title="${cVal.name}"
+                                        class="w-3 h-3 rounded-full border ${cVal.swatch} ${note.color === cKey ? 'ring-1 ring-slate-700 scale-110' : 'opacity-75 hover:opacity-100'}"></button>
+                                `).join('')}
+                                <button type="button" onclick="toggleMinimizePostIt('${note.id}')" title="Minimize"
+                                    class="p-1 rounded-lg hover:bg-black/10 text-slate-700 ml-0.5">
+                                    <i data-lucide="minus" class="w-3.5 h-3.5"></i>
                                 </button>
-
-                                <!-- Minimize / Collapse to Tab -->
-                                <button onclick="toggleMinimizeNote('${note.id}')" title="${note.minimized ? 'Expand note' : 'Collapse to tab'}"
-                                    class="p-1 rounded-lg hover:bg-black/10 text-slate-700 transition-colors">
-                                    <i data-lucide="${note.minimized ? 'maximize-2' : 'minus'}" class="w-3.5 h-3.5"></i>
-                                </button>
-
-                                <!-- Close Note -->
-                                <button onclick="closePostItNote('${note.id}')" title="Close note"
-                                    class="p-1 rounded-lg hover:bg-black/10 text-slate-700 hover:text-rose-700 transition-colors">
+                                <button type="button" onclick="deletePostIt('${note.id}')" title="Close Post-It"
+                                    class="p-1 rounded-lg hover:bg-black/10 text-slate-700">
                                     <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                 </button>
                             </div>
                         </div>
 
-                        ${note.minimized ? `
-                            <!-- Collapsed Tab Preview -->
-                            <div onclick="toggleMinimizeNote('${note.id}')" class="px-3 py-2 text-xs font-medium text-slate-800 truncate cursor-pointer flex items-center justify-between">
-                                <span class="truncate">📌 ${escapeHtml(note.thread[0]?.content || note.anchorText || 'Clarifier Note')}</span>
-                                <span class="text-[10px] text-slate-600 ml-2 shrink-0">Expand</span>
+                        <!-- Optional Quoted Context Anchor -->
+                        ${note.anchorQuote ? `
+                            <div class="mx-3 mt-2.5 px-2.5 py-1.5 rounded-xl ${theme.quoteBg} border-l-2 border-slate-700/40 text-[11px] text-slate-800 italic line-clamp-2">
+                                “${escapeHtml(note.anchorQuote)}”
                             </div>
-                        ` : `
-                            <!-- Anchor Snippet -->
-                            ${anchorHtml}
+                        ` : ''}
 
-                            <!-- Mini Q&A Thread Inside Note -->
-                            <div id="note-scroll-${note.id}" class="px-3 py-2.5 max-h-60 overflow-y-auto space-y-2.5">
-                                ${threadHtml}
-                                ${loadingHtml}
-                            </div>
+                        <!-- Post-It Mini Thread Body -->
+                        <div id="note-scroll-${note.id}" class="flex-1 overflow-y-auto px-3.5 py-3 space-y-2.5 min-h-[96px]">
+                            ${(note.messages || []).length === 0 ? `
+                                <div class="text-xs text-slate-700/80 leading-relaxed">
+                                    Ask a quick side question here. Gemini automatically sees your main thread as background context without cluttering it.
+                                </div>
+                            ` : (note.messages || []).map(m => m.role === 'user' ? `
+                                <div class="flex justify-end">
+                                    <div class="max-w-[88%] rounded-2xl rounded-tr-sm bg-black/[0.08] px-3 py-1.5 text-xs text-slate-900 whitespace-pre-wrap">${escapeHtml(m.content)}</div>
+                                </div>
+                            ` : `
+                                <div class="note-markdown">${renderMarkdown(m.content)}</div>
+                            `).join('')}
 
-                            <!-- Optional "Promote to Main" Action -->
-                            ${hasAssistantReply ? `
-                                <div class="px-3 pb-1.5 flex justify-end">
-                                    <button onclick="promoteNoteToMain('${note.id}')"
-                                        title="Insert a concise takeaway from this note into the main thread"
-                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/75 hover:bg-white text-[11px] font-medium text-slate-800 border border-black/10 shadow-2xs transition-colors">
-                                        <i data-lucide="arrow-up-left" class="w-3 h-3 text-[#1a73e8]"></i>
-                                        <span>Promote to Main</span>
-                                    </button>
+                            ${note.isGenerating ? `
+                                <div class="flex items-center gap-1 py-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-700 dot-1"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-700 dot-2"></span>
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-700 dot-3"></span>
                                 </div>
                             ` : ''}
+                        </div>
 
-                            <!-- Compact Follow-Up Input Box -->
-                            <div class="p-2 pt-1">
-                                <div onclick="focusElementSafely('note-input-${note.id}')"
-                                    class="flex items-center gap-1.5 rounded-xl bg-white/80 focus-within:bg-white border border-black/10 px-2.5 py-1.5 shadow-2xs cursor-text">
-                                    <input id="note-input-${note.id}" type="text"
-                                        onkeydown="if(event.key === 'Enter'){ event.preventDefault(); sendNoteMessage('${note.id}'); }"
-                                        placeholder="Ask clarifying follow-up..."
-                                        class="ipad-safe-input flex-1 bg-transparent text-slate-900 placeholder-slate-500 focus:outline-none min-w-0" />
-                                    <button type="button" onclick="event.stopPropagation(); sendNoteMessage('${note.id}')" ${isGenerating ? 'disabled' : ''}
-                                        class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-black disabled:opacity-40 text-white flex items-center justify-center shrink-0 transition-colors">
-                                        <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i>
-                                    </button>
-                                </div>
+                        <!-- Promote to Main Thread Bar (when note has answers) -->
+                        ${(note.messages || []).some(m => m.role === 'assistant') ? `
+                            <div class="px-3 pb-1.5 flex justify-end">
+                                <button type="button" onclick="promotePostItToMain('${note.id}')"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-[11px] font-medium text-slate-800 shadow-2xs transition-colors">
+                                    <i data-lucide="arrow-up-left" class="w-3 h-3"></i>
+                                    <span>Merge into Main Thread</span>
+                                </button>
                             </div>
-                        `}
+                        ` : ''}
+
+                        <!-- Post-It Input Composer -->
+                        <div class="p-2.5 pt-1.5 border-t border-black/[0.06]">
+                            <div onclick="focusElementSafely('note-input-${note.id}')"
+                                class="flex items-end gap-1.5 rounded-2xl ${theme.inputBg} border border-black/10 px-2.5 py-1.5 transition-colors">
+                                <textarea id="note-input-${note.id}" rows="1"
+                                    placeholder="Ask side question..."
+                                    onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendPostItMessage('${note.id}'); }"
+                                    class="ipad-safe-input flex-1 bg-transparent text-slate-900 placeholder-slate-500 focus:outline-none resize-none max-h-24 text-xs leading-snug"></textarea>
+                                <button type="button" onclick="event.stopPropagation(); sendPostItMessage('${note.id}')"
+                                    class="w-7 h-7 rounded-full bg-slate-900 hover:bg-black text-white flex items-center justify-center shrink-0 transition-colors">
+                                    <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 `;
             }).join('');
 
-            lucide.createIcons();
-            notes.forEach(n => {
-                const scroller = document.getElementById(`note-scroll-${n.id}`);
+            notes.forEach(note => {
+                const cardEl = document.getElementById(`postit-${note.id}`);
+                if (cardEl) highlightCodeBlocks(cardEl);
+                const inp = document.getElementById(`note-input-${note.id}`);
+                if (inp) attachIPadFocusFix(inp);
+                const scroller = document.getElementById(`note-scroll-${note.id}`);
                 if (scroller) scroller.scrollTop = scroller.scrollHeight;
-                const noteInput = document.getElementById(`note-input-${n.id}`);
-                if (noteInput) attachIPadFocusFix(noteInput);
-            });
-        }
-
-        async function sendNoteMessage(noteId) {
-            if (generatingNoteIds.has(noteId)) return;
-            const session = getActiveSession();
-            const note = session.notes.find(n => n.id === noteId);
-            if (!note) return;
-
-            const inputEl = document.getElementById(`note-input-${noteId}`);
-            const text = inputEl ? inputEl.value.trim() : '';
-            if (!text) return;
-
-            inputEl.value = '';
-            note.thread.push({ role: 'user', content: text });
-            generatingNoteIds.add(noteId);
-            saveState();
-            renderPostItNotes();
-
-            // Serialize Main Thread as read-only context
-            const mainContext = session.messages.length > 0
-                ? session.messages.map((m, i) => `[${i + 1}. ${m.role.toUpperCase()}]: ${m.content}`).join('\n\n')
-                : '(Main thread is currently empty.)';
-
-            const systemInstruction = `You are a concise, razor-sharp clarifying assistant living inside a floating Post-It sticky note beside the user's Main Gemini Thread.
-- Answer the user's clarifying question directly, briefly, and clearly (2–4 short sentences or a compact bullet list).
-- Use the Main Thread context and any highlighted anchor quote automatically so the user never has to repeat themselves.
-
-=== MAIN THREAD CONTEXT ===
-${mainContext}
-=== END MAIN THREAD ===`;
-
-            const contents = note.thread.map((turn, idx) => {
-                let msgText = turn.content;
-                if (idx === 0 && turn.role === 'user' && note.anchorText) {
-                    msgText = `[Highlighted excerpt from main thread: "${note.anchorText}"]\n\nClarifying question: ${turn.content}`;
-                }
-                return {
-                    role: turn.role === 'model' ? 'model' : 'user',
-                    parts: [{ text: msgText }]
-                };
             });
 
-            try {
-                const reply = await queryGeminiOrFallback({
-                    contents,
-                    systemInstruction,
-                    fallbackContext: {
-                        mode: 'postit',
-                        userQuestion: text,
-                        anchorText: note.anchorText,
-                        mainMessages: session.messages
-                    }
-                });
-                note.thread.push({ role: 'model', content: reply });
-                saveState();
-            } finally {
-                generatingNoteIds.delete(noteId);
-                renderPostItNotes();
-                setTimeout(() => {
-                    document.getElementById(`note-input-${noteId}`)?.focus();
-                }, 30);
-            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        function promoteNoteToMain(noteId) {
-            const session = getActiveSession();
-            const note = session.notes.find(n => n.id === noteId);
-            if (!note) return;
+        function startDragPostIt(e, noteId) {
+            if (e.button !== undefined && e.button !== 0) return;
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            const card = document.getElementById(`postit-${noteId}`);
+            if (!note || !card) return;
 
-            const lastQ = [...note.thread].reverse().find(t => t.role === 'user');
-            const lastA = [...note.thread].reverse().find(t => t.role === 'model');
-            if (!lastA) return;
+            bringPostItToFront(noteId);
+            card.classList.add('dragging');
 
-            const summaryMarkdown = `${lastQ ? `**Clarified (${escapeHtml(lastQ.content)}):**\n\n` : ''}${lastA.content}`;
-            session.messages.push({
-                id: 'msg_promo_' + Date.now(),
-                role: 'model',
-                promotedFromNote: true,
-                content: summaryMarkdown,
-                timestamp: Date.now()
-            });
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const origX = note.x ?? card.offsetLeft;
+            const origY = note.y ?? card.offsetTop;
 
-            saveState();
-            renderMainThread();
-            const scrollArea = document.getElementById('main-scroll-area');
-            scrollArea.scrollTop = scrollArea.scrollHeight;
-            showToast('Promoted takeaway into Main Thread');
-        }
+            const onPointerMove = (moveEvt) => {
+                const dx = moveEvt.clientX - startX;
+                const dy = moveEvt.clientY - startY;
+                const maxW = card.offsetWidth || 300;
+                note.x = Math.min(Math.max(8, origX + dx), Math.max(8, window.innerWidth - maxW - 8));
+                note.y = Math.min(Math.max(66, origY + dy), Math.max(70, window.innerHeight - 64));
+                card.style.left = `${note.x}px`;
+                card.style.top = `${note.y}px`;
+                updateTetherLine(noteId);
+            };
 
-        // =========================================================================
-        // 6. SMOOTH POINTER DRAGGING, STACKING & VISUAL SVG TETHERING
-        // =========================================================================
-        function startDragNote(event, noteId) {
-            // Only primary mouse button or touch
-            if (event.button !== undefined && event.button !== 0) return;
-            event.preventDefault();
-
-            const session = getActiveSession();
-            const note = session.notes.find(n => n.id === noteId);
-            const cardEl = document.getElementById(noteId);
-            if (!note || !cardEl) return;
-
-            bringNoteToFront(noteId);
-            cardEl.classList.add('dragging');
-
-            const startPointerX = event.clientX;
-            const startPointerY = event.clientY;
-            const origX = note.x;
-            const origY = note.y;
-            const cardRect = cardEl.getBoundingClientRect();
-
-            function onPointerMove(e) {
-                const dx = e.clientX - startPointerX;
-                const dy = e.clientY - startPointerY;
-                const maxX = window.innerWidth - cardRect.width - 8;
-                const maxY = window.innerHeight - 54;
-
-                note.x = Math.max(8, Math.min(maxX, origX + dx));
-                note.y = Math.max(66, Math.min(maxY, origY + dy));
-
-                cardEl.style.left = `${note.x}px`;
-                cardEl.style.top = `${note.y}px`;
-                drawTetherForNote(noteId);
-            }
-
-            function onPointerUp() {
-                cardEl.classList.remove('dragging');
+            const onPointerUp = () => {
+                card.classList.remove('dragging');
                 window.removeEventListener('pointermove', onPointerMove);
                 window.removeEventListener('pointerup', onPointerUp);
                 saveState();
-            }
+            };
 
             window.addEventListener('pointermove', onPointerMove);
             window.addEventListener('pointerup', onPointerUp);
         }
 
-        function bringNoteToFront(noteId) {
-            const session = getActiveSession();
-            const note = session.notes.find(n => n.id === noteId);
+        function bringPostItToFront(noteId) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
             if (!note) return;
-            topZIndex += 1;
-            note.zIndex = topZIndex;
-            const cardEl = document.getElementById(noteId);
-            if (cardEl) cardEl.style.zIndex = topZIndex;
-            saveState();
+            note.zIndex = ++topZIndex;
+            const card = document.getElementById(`postit-${noteId}`);
+            if (card) card.style.zIndex = String(note.zIndex);
         }
 
-        function changeNoteColor(noteId, colorKey) {
-            const session = getActiveSession();
-            const note = session.notes.find(n => n.id === noteId);
+        function focusPostItNote(noteId) {
+            areNotesVisible = true;
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            if (!note) return;
+            note.minimized = false;
+            note.zIndex = ++topZIndex;
+            saveState();
+            renderPostItNotes();
+            highlightTether(noteId);
+            setTimeout(() => focusElementSafely(`note-input-${noteId}`), 50);
+        }
+
+        function renamePostIt(noteId, newTitle) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            if (!note) return;
+            note.title = newTitle.trim() || 'Side Note';
+            saveState();
+            renderMainThread();
+        }
+
+        function changePostItColor(noteId, colorKey) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
             if (!note || !NOTE_THEMES[colorKey]) return;
             note.color = colorKey;
             saveState();
             renderPostItNotes();
         }
 
-        function toggleMinimizeNote(noteId) {
-            const session = getActiveSession();
-            const note = session.notes.find(n => n.id === noteId);
+        function toggleMinimizePostIt(noteId) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
             if (!note) return;
             note.minimized = !note.minimized;
             saveState();
             renderPostItNotes();
+            hideTetherLine();
         }
 
-        function togglePinNote(noteId) {
-            const session = getActiveSession();
-            const note = session.notes.find(n => n.id === noteId);
-            if (!note) return;
-            note.pinned = !note.pinned;
-            if (note.pinned) bringNoteToFront(noteId);
+        function deletePostIt(noteId) {
+            const sess = getActiveSession();
+            if (!sess) return;
+            sess.notes = sess.notes.filter(n => n.id !== noteId);
+            hideTetherLine();
             saveState();
-            renderPostItNotes();
-        }
-
-        function closePostItNote(noteId) {
-            const session = getActiveSession();
-            session.notes = session.notes.filter(n => n.id !== noteId);
-            saveState();
-            clearTether();
-            renderRecentThreads();
             renderMainThread();
             renderPostItNotes();
+            renderRecentThreads();
         }
 
         function toggleAllNotesVisibility() {
             areNotesVisible = !areNotesVisible;
             renderPostItNotes();
+            showToast(areNotesVisible ? 'Post-It notes shown' : 'Post-It notes hidden');
         }
 
         function tidyStackRight() {
-            const session = getActiveSession();
-            if (!session.notes.length) {
-                showToast('No open Post-It notes to align');
+            const sess = getActiveSession();
+            if (!sess || !sess.notes.length) {
+                showToast('No open Post-It notes to arrange');
                 return;
             }
             areNotesVisible = true;
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-            const cardWidth = Math.min(324, vw - 24);
-            const rightMarginX = Math.max(16, vw - cardWidth - 24);
+            const noteW = Math.min(324, window.innerWidth - 28);
+            const rightX = Math.max(14, window.innerWidth - noteW - 22);
+            let cursorY = 78;
 
-            let currentY = 80;
-            session.notes.forEach((note, idx) => {
-                note.x = rightMarginX;
-                note.y = currentY;
-                note.zIndex = 100 + idx;
-                const estHeight = note.minimized ? 54 : 260;
-                currentY += estHeight + 14;
-                if (currentY > vh - 160) {
-                    currentY = 88 + ((idx % 3) * 36);
-                }
+            sess.notes.forEach((note, idx) => {
+                note.x = rightX - (idx % 2) * 10;
+                note.y = cursorY;
+                note.zIndex = ++topZIndex;
+                cursorY += note.minimized ? 52 : 195;
+                if (cursorY > window.innerHeight - 160) cursorY = 92;
             });
 
             saveState();
             renderPostItNotes();
-            showToast('Aligned Post-Its along the right margin');
+            showToast('Aligned Post-Its along right margin');
         }
 
-        // Visual SVG Tether & Source Message Highlight
-        function drawTetherForNote(noteId) {
-            activeTetherNoteId = noteId;
-            const session = getActiveSession();
-            const note = session.notes.find(n => n.id === noteId);
-            const pathEl = document.getElementById('tether-path');
+        async function sendPostItMessage(noteId) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            const input = document.getElementById(`note-input-${noteId}`);
+            if (!sess || !note || !input || note.isGenerating) return;
 
-            // Clear previous highlight
-            document.querySelectorAll('.source-message-highlighted').forEach(el => {
-                el.classList.remove('source-message-highlighted');
-            });
+            const text = input.value.trim();
+            if (!text) return;
 
-            if (!note || !note.sourceMessageId || !areNotesVisible) {
-                pathEl.classList.add('opacity-0');
-                return;
+            note.messages.push({ role: 'user', content: text });
+            if (note.title.startsWith('Side Note #') || note.title === 'Side question') {
+                note.title = text.length > 26 ? text.slice(0, 26) + '…' : text;
             }
-
-            const sourceEl = document.getElementById(note.sourceMessageId);
-            const noteEl = document.getElementById(noteId);
-            if (!sourceEl || !noteEl) {
-                pathEl.classList.add('opacity-0');
-                return;
-            }
-
-            sourceEl.classList.add('source-message-highlighted');
-
-            const sRect = sourceEl.getBoundingClientRect();
-            const nRect = noteEl.getBoundingClientRect();
-
-            // Connect right edge of main message to left edge of Post-It note
-            const x1 = Math.min(sRect.right - 8, nRect.left - 12);
-            const y1 = Math.max(76, Math.min(window.innerHeight - 80, sRect.top + Math.min(64, sRect.height / 2)));
-            const x2 = nRect.left;
-            const y2 = nRect.top + 22;
-
-            if (x2 <= x1 + 10) {
-                pathEl.classList.add('opacity-0');
-                return;
-            }
-
-            const cpOffset = Math.max(40, (x2 - x1) * 0.45);
-            const d = `M ${x1} ${y1} C ${x1 + cpOffset} ${y1}, ${x2 - cpOffset} ${y2}, ${x2} ${y2}`;
-            pathEl.setAttribute('d', d);
-            pathEl.classList.remove('opacity-0');
-        }
-
-        function clearTether() {
-            activeTetherNoteId = null;
-            document.getElementById('tether-path').classList.add('opacity-0');
-            document.querySelectorAll('.source-message-highlighted').forEach(el => {
-                el.classList.remove('source-message-highlighted');
-            });
-        }
-
-        function scrollToSourceMessage(messageId) {
-            if (!messageId) return;
-            const el = document.getElementById(messageId);
-            if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                el.classList.add('source-message-highlighted');
-                setTimeout(() => el.classList.remove('source-message-highlighted'), 1600);
-            }
-        }
-
-        function focusNotesForMessage(messageId) {
-            areNotesVisible = true;
-            const session = getActiveSession();
-            const matching = session.notes.filter(n => n.sourceMessageId === messageId);
-            matching.forEach(n => {
-                n.minimized = false;
-                bringNoteToFront(n.id);
-            });
+            input.value = '';
+            note.isGenerating = true;
+            saveState();
             renderPostItNotes();
-            if (matching[0]) drawTetherForNote(matching[0].id);
+            renderMainThread();
+
+            try {
+                const reply = await queryGeminiOrFallback(sess.messages, note);
+                note.messages.push({ role: 'assistant', content: reply });
+            } catch (err) {
+                note.messages.push({ role: 'assistant', content: `⚠️ ${err.message}` });
+            } finally {
+                note.isGenerating = false;
+                saveState();
+                renderPostItNotes();
+                renderRecentThreads();
+            }
+        }
+
+        function promotePostItToMain(noteId) {
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            if (!sess || !note || !note.messages.length) return;
+
+            const transcript = note.messages
+                .map(m => `**${m.role === 'user' ? 'Side Question' : 'Clarification'}:** ${m.content}`)
+                .join('\n\n');
+
+            sess.messages.push({
+                id: uid('msg'),
+                role: 'assistant',
+                content: `### 📌 Merged from Post-It: *${note.title}*\n\n${transcript}`
+            });
+            sess.updatedAt = Date.now();
+            saveState();
+            renderMainThread();
+            scrollMainToBottom();
+            showToast('Merged Post-It note into Main Thread');
         }
 
         // =========================================================================
-        // 7. TEXT SELECTION POPOVER ("📌 Clarify on Post-It")
+        // 5. TEXT SELECTION POPOVER & SVG TETHER LINES
         // =========================================================================
-        document.addEventListener('mouseup', (e) => {
+        function handleTextSelection() {
             const tooltip = document.getElementById('selection-tooltip');
-            if (tooltip.contains(e.target)) return;
+            const mainContainer = document.getElementById('main-thread-container');
+            if (!tooltip || !mainContainer) return;
 
             const sel = window.getSelection();
-            const text = sel ? sel.toString().trim() : '';
-            const mainContainer = document.getElementById('main-thread-container');
-
-            if (text.length >= 3 && text.length <= 500 && sel.anchorNode && mainContainer.contains(sel.anchorNode)) {
-                // Find parent AI message block if available
-                let node = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
-                const msgWrapper = node.closest('[data-message-id]');
-                const sourceMessageId = msgWrapper ? msgWrapper.getAttribute('data-message-id') : null;
-
-                currentSelectionData = { text, sourceMessageId };
-                const rect = sel.getRangeAt(0).getBoundingClientRect();
-                tooltip.style.left = `${Math.min(window.innerWidth - 95, Math.max(95, rect.left + rect.width / 2))}px`;
-                tooltip.style.top = `${Math.max(70, rect.top)}px`;
-                tooltip.classList.remove('hidden');
+            const selectedText = sel ? sel.toString().trim() : '';
+            if (!selectedText || selectedText.length < 3 || sel.rangeCount === 0) {
+                hideSelectionTooltip();
                 return;
             }
 
-            tooltip.classList.add('hidden');
-        });
+            const range = sel.getRangeAt(0);
+            const commonAncestor = range.commonAncestorContainer.nodeType === 1
+                ? range.commonAncestorContainer
+                : range.commonAncestorContainer.parentElement;
 
-        // =========================================================================
-        // 8. MARKDOWN FORMATTING & EXPORT
-        // =========================================================================
-        function formatMarkdownWithCopy(rawMd) {
-            const html = marked.parse(rawMd || '');
-            const temp = document.createElement('div');
-            temp.innerHTML = html;
-
-            temp.querySelectorAll('pre').forEach(pre => {
-                const codeEl = pre.querySelector('code');
-                const langClass = Array.from(codeEl?.classList || []).find(c => c.startsWith('language-'));
-                const langLabel = langClass ? langClass.replace('language-', '') : 'code';
-
-                const wrapper = document.createElement('div');
-                wrapper.className = 'my-3.5 rounded-2xl overflow-hidden border border-slate-200 bg-[#f8fafd]';
-
-                const bar = document.createElement('div');
-                bar.className = 'flex items-center justify-between px-4 py-1.5 bg-[#f0f4f9] text-[11px] font-mono text-[#444746]';
-                bar.innerHTML = `
-                    <span>${escapeHtml(langLabel)}</span>
-                    <button type="button" onclick="copyCodeSnippet(this)" class="flex items-center gap-1 hover:text-[#1f1f1f] transition-colors">
-                        <i data-lucide="copy" class="w-3 h-3"></i>
-                        <span>Copy</span>
-                    </button>
-                `;
-
-                pre.style.margin = '0';
-                pre.style.border = 'none';
-                pre.style.borderRadius = '0';
-
-                pre.parentNode.insertBefore(wrapper, pre);
-                wrapper.appendChild(bar);
-                wrapper.appendChild(pre);
-            });
-
-            return temp.innerHTML;
-        }
-
-        function copyCodeSnippet(btn) {
-            const code = btn.closest('.rounded-2xl').querySelector('code').innerText;
-            copyTextToClipboard(code);
-            showToast('Code copied');
-        }
-
-        function copyRawText(messageId) {
-            const session = getActiveSession();
-            const msg = session.messages.find(m => m.id === messageId);
-            if (msg) {
-                copyTextToClipboard(msg.content);
-                showToast('Response copied');
+            if (!commonAncestor || !mainContainer.contains(commonAncestor)) {
+                hideSelectionTooltip();
+                return;
             }
+
+            const msgEl = commonAncestor.closest('[data-message-id]');
+            const rect = range.getBoundingClientRect();
+            if (!rect || (rect.width === 0 && rect.height === 0)) {
+                hideSelectionTooltip();
+                return;
+            }
+
+            pendingSelection = {
+                text: selectedText,
+                messageId: msgEl ? msgEl.getAttribute('data-message-id') : null
+            };
+
+            tooltip.style.left = `${Math.min(Math.max(90, rect.left + rect.width / 2), window.innerWidth - 90)}px`;
+            tooltip.style.top = `${Math.max(64, rect.top)}px`;
+            tooltip.classList.remove('hidden');
         }
 
-        function openExportModal() {
-            updateExportPreview();
-            document.getElementById('export-modal').classList.remove('hidden');
+        function hideSelectionTooltip() {
+            const tooltip = document.getElementById('selection-tooltip');
+            if (tooltip) tooltip.classList.add('hidden');
         }
 
-        function closeExportModal() {
-            document.getElementById('export-modal').classList.add('hidden');
-        }
-
-        function updateExportPreview() {
-            const session = getActiveSession();
-            const includeNotes = document.getElementById('export-include-notes').checked;
-
-            let md = `# ${session.title}\n\n`;
-            session.messages.forEach(m => {
-                const heading = m.role === 'user' ? '### User' : '### Gemini';
-                md += `${heading}\n\n${m.content}\n\n`;
+        function createPostItFromSelection() {
+            const { text, messageId } = pendingSelection;
+            hideSelectionTooltip();
+            try { window.getSelection()?.removeAllRanges(); } catch (_) {}
+            spawnPostItNote({
+                anchorQuote: text,
+                anchorMessageId: messageId
             });
+        }
 
-            if (includeNotes && session.notes.length > 0) {
-                md += `---\n\n## 📌 Post-It Clarifier Footnotes\n\n`;
-                session.notes.forEach((note, idx) => {
-                    md += `#### Note #${idx + 1}${note.anchorText ? ` — *"${note.anchorText}"*` : ''}\n\n`;
-                    note.thread.forEach(t => {
-                        md += t.role === 'user' ? `- **Q:** ${t.content}\n` : `  - **A:** ${t.content}\n`;
+        function highlightTether(noteId) {
+            activeHoveredNoteId = noteId;
+            updateTetherLine(noteId);
+        }
+
+        function updateTetherLine(noteId) {
+            const path = document.getElementById('tether-path');
+            const sess = getActiveSession();
+            const note = sess?.notes.find(n => n.id === noteId);
+            if (!path || !note || !note.anchorMessageId || !areNotesVisible) {
+                hideTetherLine();
+                return;
+            }
+
+            const msgEl = document.getElementById(note.anchorMessageId);
+            const cardEl = document.getElementById(`postit-${noteId}`);
+            if (!msgEl || !cardEl) {
+                hideTetherLine();
+                return;
+            }
+
+            document.querySelectorAll('.source-message-highlighted').forEach(el => el.classList.remove('source-message-highlighted'));
+            msgEl.classList.add('source-message-highlighted');
+
+            const mRect = msgEl.getBoundingClientRect();
+            const cRect = cardEl.getBoundingClientRect();
+
+            const x1 = Math.min(mRect.right - 12, cRect.left);
+            const y1 = Math.min(Math.max(68, mRect.top + 28), window.innerHeight - 24);
+            const x2 = cRect.left;
+            const y2 = cRect.top + 24;
+            const midX = (x1 + x2) / 2;
+
+            path.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+            path.classList.remove('opacity-0');
+        }
+
+        function hideTetherLine() {
+            activeHoveredNoteId = null;
+            const path = document.getElementById('tether-path');
+            if (path) path.classList.add('opacity-0');
+            document.querySelectorAll('.source-message-highlighted').forEach(el => el.classList.remove('source-message-highlighted'));
+        }
+
+        // =========================================================================
+        // 6. GEMINI API CLIENT & DEMO FALLBACK
+        // =========================================================================
+        async function queryGeminiOrFallback(mainMessages, sideNote) {
+            const apiKey = (appSettings.apiKey || '').trim();
+            const model = appSettings.model || 'gemini-2.5-flash';
+
+            if (!apiKey || model === 'demo') {
+                await new Promise(r => setTimeout(r, 650));
+                if (sideNote) {
+                    const lastQ = sideNote.messages[sideNote.messages.length - 1]?.content || '';
+                    return `*(Demo Mode)* Here is a focused clarification regarding **${sideNote.title}**:\n\nFor *"${lastQ}"*, the key takeaway fits right alongside your main thread without derailing it. Add your free Google AI Studio API key in **Settings (⚙️)** for live Gemini responses.`;
+                }
+                const lastMain = mainMessages[mainMessages.length - 1]?.content || '';
+                return `*(Demo Mode)* You asked:\n> ${lastMain}\n\nTo receive live Gemini responses across both your **Main Thread** and your floating **📌 Post-It notes**, click the **⚙️ Settings** icon in the top-right corner and paste your Google AI Studio API key.`;
+            }
+
+            const contents = [];
+            let systemInstructionText = 'You are Gemini, a helpful, concise, and clear AI assistant.';
+
+            if (sideNote) {
+                const mainContextSummary = mainMessages
+                    .slice(-10)
+                    .map(m => `${m.role === 'user' ? 'User' : 'Gemini'}: ${m.content}`)
+                    .join('\n\n');
+
+                systemInstructionText =
+                    `You are answering a focused side-clarification on a sticky note alongside a main conversation. Keep your answer concise, crisp, and directly relevant so it fits comfortably inside a compact Post-It card.\n\n` +
+                    (sideNote.anchorQuote ? `Highlighted passage the user is asking about:\n"${sideNote.anchorQuote}"\n\n` : '') +
+                    `Background Main Thread Context:\n${mainContextSummary}`;
+
+                for (const m of sideNote.messages) {
+                    contents.push({
+                        role: m.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: m.content }]
                     });
-                    md += `\n`;
-                });
+                }
+            } else {
+                for (const m of mainMessages) {
+                    contents.push({
+                        role: m.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: m.content }]
+                    });
+                }
             }
 
-            document.getElementById('export-preview-textarea').value = md;
-        }
+            const cleanModel = model.replace(/^models\//, '');
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cleanModel)}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
-        function copyExportMarkdown() {
-            copyTextToClipboard(document.getElementById('export-preview-textarea').value);
-            showToast('Markdown copied to clipboard');
-        }
+            const res = await fetchWithTimeout(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    systemInstruction: { parts: [{ text: systemInstructionText }] },
+                    contents
+                })
+            }, 30000);
 
-        function downloadExportMarkdown() {
-            const session = getActiveSession();
-            const content = document.getElementById('export-preview-textarea').value;
-            const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const slug = session.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'gemini-thread';
-            a.href = url;
-            a.download = `${slug}.md`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('Downloaded .md file');
-        }
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data?.error?.message || `Gemini API error (HTTP ${res.status})`);
+            }
 
-        function showKeyboardHelp() {
-            showToast('Highlight any text to pop a Post-It • Drag headers to move • Alt+N for New Note');
+            const replyText = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+            if (!replyText) {
+                throw new Error('Gemini returned an empty response.');
+            }
+            return replyText;
         }
 
         // =========================================================================
-        // 8B. SETTINGS MODAL, API TEST & CROSS-DEVICE JSON SYNC
+        // 7. SETTINGS, EXPORT (.MD) & JSON SYNC MODALS
         // =========================================================================
-        function openSettingsModal(focusSection = 'api') {
-            const modal = document.getElementById('settings-modal');
-            const keyInput = document.getElementById('settings-api-key');
-            const modelSelect = document.getElementById('settings-model-select');
-            const statusEl = document.getElementById('api-test-status');
-
-            keyInput.value = appSettings.apiKey || '';
-            keyInput.type = 'password';
-            modelSelect.value = MODEL_LABELS[appSettings.model] ? appSettings.model : 'gemini-4-hydrogen';
-            statusEl.textContent = "Stored strictly in your browser's localStorage—never uploaded anywhere.";
-            statusEl.className = 'text-[11px] text-[#444746]';
-
-            modal.classList.remove('hidden');
-            lucide.createIcons();
-
+        function updateModelStatusPill() {
+// ... existing code ... -->
             if (focusSection === 'sync') {
                 document.getElementById('settings-section-sync')?.scrollIntoView({ behavior: 'smooth' });
             }
         }
 
         function closeSettingsModal() {
-            document.getElementById('settings-modal').classList.add('hidden');
+            document.getElementById('settings-modal')?.classList.add('hidden');
         }
 
         function toggleApiKeyVisibility() {
             const input = document.getElementById('settings-api-key');
             const icon = document.getElementById('api-key-eye-icon');
+            if (!input) return;
             const isHidden = input.type === 'password';
             input.type = isHidden ? 'text' : 'password';
-            icon.setAttribute('data-lucide', isHidden ? 'eye-off' : 'eye');
-            lucide.createIcons();
+            if (icon) {
+                icon.setAttribute('data-lucide', isHidden ? 'eye-off' : 'eye');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
         }
 
         function saveSettingsFromModal() {
-            const keyVal = document.getElementById('settings-api-key').value.trim();
-            const modelVal = document.getElementById('settings-model-select').value;
+            const keyVal = (document.getElementById('settings-api-key')?.value || '').replace(/\s+/g, '');
+            const modelVal = document.getElementById('settings-model-select')?.value || 'gemini-2.5-flash';
+
             appSettings.apiKey = keyVal;
             appSettings.model = modelVal;
             saveState();
             updateModelStatusPill();
             closeSettingsModal();
-            showToast(`Saved settings (${MODEL_LABELS[modelVal] || modelVal})`);
-        }
-
-        async function testGeminiConnection() {
-            const keyVal = document.getElementById('settings-api-key').value.replace(/\s+/g, '');
-            document.getElementById('settings-api-key').value = keyVal;
-            const modelSelect = document.getElementById('settings-model-select');
-            const modelVal = modelSelect.value;
-            const statusEl = document.getElementById('api-test-status');
-            const btn = document.getElementById('test-api-btn');
-
-            if (modelVal === 'demo') {
-                statusEl.textContent = 'Demo Mode selected — no API key needed.';
-                statusEl.className = 'text-[11px] text-amber-700 font-medium';
-                return;
-            }
-            if (!keyVal) {
-                statusEl.textContent = 'Please paste your Google AI Studio API key first.';
-                statusEl.className = 'text-[11px] text-rose-600 font-medium';
-                return;
-            }
-
-            btn.disabled = true;
-            btn.textContent = 'Testing...';
-            statusEl.textContent = 'Verifying API key with Google AI Studio...';
-            statusEl.className = 'text-[11px] text-[#444746]';
-
-            try {
-                // Step 1: Fast GET check against /v1beta/models to verify key & discover enabled models
-                const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(keyVal)}`;
-                const listRes = await fetchWithTimeout(listUrl, { method: 'GET' }, 10000);
-                const listData = await listRes.json().catch(() => ({}));
-                if (!listRes.ok) {
-                    throw new Error(listData?.error?.message || `Key check failed (HTTP ${listRes.status})`);
-                }
-
-                // Step 2: Test generateContent on chosen model
-                statusEl.textContent = `Key valid! Testing ${MODEL_LABELS[modelVal] || modelVal}...`;
-                const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelVal)}:generateContent?key=${encodeURIComponent(keyVal)}`;
-                const res = await fetchWithTimeout(genUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ role: 'user', parts: [{ text: 'Reply with the single word: Ready' }] }]
-                    })
-                }, 12000);
-
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    // If chosen model fails (e.g. paid-only tier), try falling back to gemini-3.8-flash or gemini-3.5-flash-lite
-                    const fallbackCandidates = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'].filter(m => m !== modelVal);
-                    for (const candidate of fallbackCandidates) {
-                        const fbUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(candidate)}:generateContent?key=${encodeURIComponent(keyVal)}`;
-                        const fbRes = await fetchWithTimeout(fbUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                contents: [{ role: 'user', parts: [{ text: 'Reply with the single word: Ready' }] }]
-                            })
-                        }, 10000);
-                        if (fbRes.ok) {
-                            modelSelect.value = candidate;
-                            statusEl.textContent = `✓ Key valid! Switched to ${MODEL_LABELS[candidate]} (enabled on your API tier). Click Save Settings.`;
-                            statusEl.className = 'text-[11px] text-emerald-700 font-medium';
-                            return;
-                        }
-                    }
-                    throw new Error(data?.error?.message || `HTTP ${res.status}`);
-                }
-
-                statusEl.textContent = `✓ Connected successfully to ${MODEL_LABELS[modelVal] || modelVal}! Click Save Settings.`;
-                statusEl.className = 'text-[11px] text-emerald-700 font-medium';
-            } catch (err) {
-                statusEl.textContent = `✕ ${err.message}`;
-                statusEl.className = 'text-[11px] text-rose-600 font-medium';
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Test';
-            }
+            showToast('Workspace settings saved');
         }
 
         function exportWorkspaceJSON() {
-            const backupPayload = {
-                app: 'Gemini Thread + Post-It Sidekick',
+            const payload = {
                 version: 2,
                 exportedAt: new Date().toISOString(),
-                activeSessionId,
                 sessions
             };
-            const jsonStr = JSON.stringify(backupPayload, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            const dateStamp = new Date().toISOString().slice(0, 10);
             a.href = url;
-            a.download = `gemini-workspace-backup-${dateStamp}.json`;
+            a.download = `gemini-workspace-${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
-            showToast('Exported full workspace JSON backup');
+            showToast('Workspace exported (.json)');
         }
 
         function handleImportWorkspaceJSON(event) {
-            const file = event.target.files?.[0];
+            const file = event.target?.files?.[0];
             if (!file) return;
+            const merge = document.getElementById('import-merge-checkbox')?.checked ?? true;
 
-            const shouldMerge = document.getElementById('import-merge-checkbox')?.checked ?? true;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = (e) => {
                 try {
-                    const parsed = JSON.parse(e.target.result);
+                    const parsed = JSON.parse(String(e.target?.result || '{}'));
                     const importedSessions = Array.isArray(parsed) ? parsed : parsed.sessions;
                     if (!Array.isArray(importedSessions) || importedSessions.length === 0) {
                         throw new Error('No valid threads found in JSON file.');
                     }
 
-                    if (shouldMerge) {
-                        const existingMap = new Map(sessions.map(s => [s.id, s]));
-                        importedSessions.forEach(imp => {
-                            if (imp && imp.id && Array.isArray(imp.messages)) {
-                                existingMap.set(imp.id, {
-                                    ...imp,
-                                    notes: Array.isArray(imp.notes) ? imp.notes : []
-                                });
-                            }
-                        });
-                        sessions = Array.from(existingMap.values()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+                    if (merge) {
+                        const existingIds = new Set(sessions.map(s => s.id));
+                        const fresh = importedSessions.filter(s => s && s.id && !existingIds.has(s.id));
+                        sessions = [...fresh, ...sessions];
+                        showToast(`Merged ${fresh.length} new thread(s)`);
                     } else {
-                        sessions = importedSessions.map(imp => ({
-                            ...imp,
-                            notes: Array.isArray(imp.notes) ? imp.notes : []
-                        }));
-                        activeSessionId = parsed.activeSessionId && sessions.some(s => s.id === parsed.activeSessionId)
-                            ? parsed.activeSessionId
-                            : sessions[0].id;
+                        sessions = importedSessions;
+                        activeSessionId = sessions[0].id;
+                        showToast(`Restored ${sessions.length} thread(s)`);
                     }
 
                     saveState();
                     renderAll();
                     closeSettingsModal();
-                    showToast(`Imported ${importedSessions.length} thread(s)`);
                 } catch (err) {
                     showToast(`Import failed: ${err.message}`);
                 } finally {
@@ -2103,127 +1822,70 @@ ${mainContext}
             reader.readAsText(file);
         }
 
-        // =========================================================================
-        // 9. UTILITIES, IPADOS FOCUS HELPERS & INITIALIZATION
-        // =========================================================================
-        function focusElementSafely(elementId) {
-            const el = document.getElementById(elementId);
-            if (!el) return;
-            try {
-                el.focus({ preventScroll: false });
-            } catch (e) {
-                el.focus();
-            }
-        }
-
-        function attachIPadFocusFix(el) {
-            if (!el || el.dataset.ipadFocusBound) return;
-            el.dataset.ipadFocusBound = 'true';
-            el.addEventListener('touchstart', (e) => {
-                e.stopPropagation();
-                if (document.activeElement !== el) {
-                    el.focus();
-                }
-            }, { passive: true });
-        }
-
-        function copyTextToClipboard(text) {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.select();
-            try {
-                document.execCommand('copy');
-            } catch (e) {}
-            document.body.removeChild(ta);
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-
-        function autoResizeTextarea(el) {
-            el.style.height = 'auto';
-            el.style.height = Math.min(el.scrollHeight, 160) + 'px';
-        }
-
-        function showToast(message) {
-            const container = document.getElementById('toast-container');
-            const el = document.createElement('div');
-            el.className = 'px-4 py-2 rounded-full bg-[#1f1f1f] text-white text-xs font-medium shadow-lg transition-all duration-200 opacity-0 translate-y-1';
-            el.textContent = message;
-            container.appendChild(el);
-            requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-1'));
-            setTimeout(() => {
-                el.classList.add('opacity-0', 'translate-y-1');
-                setTimeout(() => el.remove(), 220);
-            }, 2500);
-        }
-
-        function renderAll() {
-            try { applyLeftSidebarUI(); } catch (e) { console.error(e); }
-            try { updateModelStatusPill(); } catch (e) { console.error(e); }
-            try { renderRecentThreads(); } catch (e) { console.error(e); }
-            try { renderMainThread(); } catch (e) { console.error(e); }
-            try { renderPostItNotes(); } catch (e) { console.error(e); }
-            if (window.lucide && typeof lucide.createIcons === 'function') {
-                lucide.createIcons();
-            }
-        }
-
-        function initApp() {
-            loadState();
+        function resetDemoWorkspace() {
+            sessions = createDefaultSessions();
+            activeSessionId = sessions[0].id;
+            saveState();
             renderAll();
+            closeSettingsModal();
+            showToast('Sample threads restored');
+        }
 
-            const mainInput = document.getElementById('main-prompt-input');
-            if (mainInput) {
-                attachIPadFocusFix(mainInput);
-                mainInput.addEventListener('input', () => autoResizeTextarea(mainInput));
-                mainInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMainMessage();
-                    }
-                });
+        function buildExportMarkdown() {
+            const sess = getActiveSession();
+            if (!sess) return '';
+            const includeNotes = document.getElementById('export-include-notes')?.checked ?? true;
+
+            let md = `# ${sess.title || 'Gemini Thread'}\n\n`;
+            for (const m of sess.messages) {
+                md += `## ${m.role === 'user' ? 'You' : 'Gemini'}\n\n${m.content}\n\n---\n\n`;
             }
-            attachIPadFocusFix(document.getElementById('thread-search-input'));
-            attachIPadFocusFix(document.getElementById('settings-api-key'));
 
-            document.getElementById('main-scroll-area')?.addEventListener('scroll', () => {
-                if (activeTetherNoteId) drawTetherForNote(activeTetherNoteId);
-            });
-
-            window.addEventListener('resize', () => {
-                applyLeftSidebarUI();
-                renderPostItNotes();
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.altKey && e.key.toLowerCase() === 'n') {
-                    e.preventDefault();
-                    spawnPostItNote({});
+            if (includeNotes && sess.notes && sess.notes.length > 0) {
+                md += `## 📌 Sidekick Post-It Footnotes\n\n`;
+                for (const n of sess.notes) {
+                    md += `### ${n.title}\n`;
+                    if (n.anchorQuote) md += `> "${n.anchorQuote}"\n\n`;
+                    for (const nm of (n.messages || [])) {
+                        md += `- **${nm.role === 'user' ? 'Question' : 'Answer'}:** ${nm.content}\n`;
+                    }
+                    md += `\n`;
                 }
-                if (e.key === 'Escape') {
-                    closeExportModal();
-                    closeSettingsModal();
-                    document.getElementById('selection-tooltip')?.classList.add('hidden');
-                }
-            });
+            }
+            return md.trim();
         }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
-        } else {
-            initApp();
+        function openExportModal() {
+            updateExportPreview();
+            document.getElementById('export-modal')?.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
-    </script>
-</body>
-</html>
+
+        function closeExportModal() {
+            document.getElementById('export-modal')?.classList.add('hidden');
+        }
+
+        function updateExportPreview() {
+            const ta = document.getElementById('export-preview-textarea');
+            if (ta) ta.value = buildExportMarkdown();
+        }
+
+        function copyExportMarkdown() {
+            const ta = document.getElementById('export-preview-textarea');
+            if (ta) copyTextToClipboard(ta.value, 'Markdown copied to clipboard');
+        }
+
+        function downloadExportMarkdown() {
+            const md = buildExportMarkdown();
+            const sess = getActiveSession();
+            const slug = (sess?.title || 'gemini-thread').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${slug || 'gemini-thread'}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Downloaded .md file');
+        }
+// ... existing code ... -->
