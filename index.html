@@ -492,10 +492,11 @@
                         <label for="settings-model-select" class="block text-xs font-medium text-[#1f1f1f]">Active Model</label>
                         <select id="settings-model-select"
                             class="ipad-safe-input w-full px-3.5 py-2.5 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] focus:outline-none">
-                            <option value="gemini-4-hydrogen">Gemini 4 Hydrogen — Fast & Free Tier Friendly (Default)</option>
-                            <option value="gemini-4-neon">Gemini 4 Neon — Latest Frontier Flagship</option>
+                            <option value="gemini-4-hydrogen">Gemini 4 Hydrogen — Latest Fast Model (Default)</option>
+                            <option value="gemini-3.8-flash">Gemini 3.8 Flash — Balanced Coding & Chat</option>
+                            <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite — Free Tier Workhorse</option>
+                            <option value="gemini-4-neon">Gemini 4 Neon — Frontier Flagship</option>
                             <option value="gemini-4-carbon">Gemini 4 Carbon — Deep Reasoning</option>
-                            <option value="gemini-3.8-flash">Gemini 3.8 Flash — Ultra-Fast</option>
                             <option value="demo">Demo Mode — Offline Simulated Replies</option>
                         </select>
                     </div>
@@ -567,9 +568,10 @@
 
         const MODEL_LABELS = {
             'gemini-4-hydrogen': 'Gemini 4 Hydrogen',
+            'gemini-3.8-flash': 'Gemini 3.8 Flash',
+            'gemini-3.5-flash-lite': 'Gemini 3.5 Flash-Lite',
             'gemini-4-neon': 'Gemini 4 Neon',
             'gemini-4-carbon': 'Gemini 4 Carbon',
-            'gemini-3.8-flash': 'Gemini 3.8 Flash',
             'demo': 'Demo Mode'
         };
 
@@ -821,6 +823,21 @@
         // =========================================================================
         // 2. GEMINI API CALLER WITH SMART BUILT-IN CONTEXTUAL FALLBACK
         // =========================================================================
+        async function fetchWithTimeout(url, options = {}, timeoutMs = 12000) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                return await fetch(url, { ...options, signal: controller.signal });
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    throw new Error(`Request timed out after ${Math.round(timeoutMs / 1000)}s — check your network or API key`);
+                }
+                throw err;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
         async function queryGeminiOrFallback({ contents, systemInstruction, fallbackContext }) {
             const userKey = (appSettings.apiKey || '').trim();
             const selectedModel = appSettings.model || 'gemini-4-hydrogen';
@@ -838,14 +855,14 @@
                 }
             };
 
-            const delays = [800, 1600];
+            const delays = [800];
             for (let attempt = 0; attempt <= delays.length; attempt++) {
                 try {
-                    const response = await fetch(url, {
+                    const response = await fetchWithTimeout(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
-                    });
+                    }, 25000);
 
                     const data = await response.json().catch(() => ({}));
                     if (!response.ok) {
@@ -861,7 +878,7 @@
                         await new Promise(r => setTimeout(r, delays[attempt]));
                     } else {
                         showToast(`API Notice: ${err.message}`);
-                        return `> **Gemini API Error:** ${escapeHtml(err.message)}\n>\n> Check your API key or model selection in **Settings (⚙️)**, or switch to **Demo Mode** to test offline.\n\n---\n\n${generateContextualFallbackReply(fallbackContext)}`;
+                        return `> **Gemini API Error:** ${escapeHtml(err.message)}\n>\n> Check your API key or try switching to **Gemini 3.8 Flash** or **Gemini 3.5 Flash-Lite** in **Settings (⚙️)**.\n\n---\n\n${generateContextualFallbackReply(fallbackContext)}`;
                     }
                 }
             }
@@ -1930,8 +1947,10 @@ ${mainContext}
         }
 
         async function testGeminiConnection() {
-            const keyVal = document.getElementById('settings-api-key').value.trim();
-            const modelVal = document.getElementById('settings-model-select').value;
+            const keyVal = document.getElementById('settings-api-key').value.replace(/\s+/g, '');
+            document.getElementById('settings-api-key').value = keyVal;
+            const modelSelect = document.getElementById('settings-model-select');
+            const modelVal = modelSelect.value;
             const statusEl = document.getElementById('api-test-status');
             const btn = document.getElementById('test-api-btn');
 
@@ -1948,26 +1967,56 @@ ${mainContext}
 
             btn.disabled = true;
             btn.textContent = 'Testing...';
-            statusEl.textContent = `Connecting to ${MODEL_LABELS[modelVal] || modelVal}...`;
+            statusEl.textContent = 'Verifying API key with Google AI Studio...';
             statusEl.className = 'text-[11px] text-[#444746]';
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelVal)}:generateContent?key=${encodeURIComponent(keyVal)}`;
-                const res = await fetch(url, {
+                // Step 1: Fast GET check against /v1beta/models to verify key & discover enabled models
+                const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(keyVal)}`;
+                const listRes = await fetchWithTimeout(listUrl, { method: 'GET' }, 10000);
+                const listData = await listRes.json().catch(() => ({}));
+                if (!listRes.ok) {
+                    throw new Error(listData?.error?.message || `Key check failed (HTTP ${listRes.status})`);
+                }
+
+                // Step 2: Test generateContent on chosen model
+                statusEl.textContent = `Key valid! Testing ${MODEL_LABELS[modelVal] || modelVal}...`;
+                const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelVal)}:generateContent?key=${encodeURIComponent(keyVal)}`;
+                const res = await fetchWithTimeout(genUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ role: 'user', parts: [{ text: 'Reply with the single word: Ready' }] }]
                     })
-                });
+                }, 12000);
+
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) {
+                    // If chosen model fails (e.g. paid-only tier), try falling back to gemini-3.8-flash or gemini-3.5-flash-lite
+                    const fallbackCandidates = ['gemini-3.8-flash', 'gemini-3.5-flash-lite'].filter(m => m !== modelVal);
+                    for (const candidate of fallbackCandidates) {
+                        const fbUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(candidate)}:generateContent?key=${encodeURIComponent(keyVal)}`;
+                        const fbRes = await fetchWithTimeout(fbUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ role: 'user', parts: [{ text: 'Reply with the single word: Ready' }] }]
+                            })
+                        }, 10000);
+                        if (fbRes.ok) {
+                            modelSelect.value = candidate;
+                            statusEl.textContent = `✓ Key valid! Switched to ${MODEL_LABELS[candidate]} (enabled on your API tier). Click Save Settings.`;
+                            statusEl.className = 'text-[11px] text-emerald-700 font-medium';
+                            return;
+                        }
+                    }
                     throw new Error(data?.error?.message || `HTTP ${res.status}`);
                 }
-                statusEl.textContent = `✓ Connected successfully to ${MODEL_LABELS[modelVal] || modelVal}!`;
+
+                statusEl.textContent = `✓ Connected successfully to ${MODEL_LABELS[modelVal] || modelVal}! Click Save Settings.`;
                 statusEl.className = 'text-[11px] text-emerald-700 font-medium';
             } catch (err) {
-                statusEl.textContent = `✕ Connection failed: ${err.message}`;
+                statusEl.textContent = `✕ ${err.message}`;
                 statusEl.className = 'text-[11px] text-rose-600 font-medium';
             } finally {
                 btn.disabled = false;
@@ -2060,17 +2109,17 @@ ${mainContext}
             if (!el || el.dataset.ipadFocusBound) return;
             el.dataset.ipadFocusBound = 'true';
             el.addEventListener('touchstart', (e) => {
-                e.stopPropagation();
-                if (document.activeElement !== el) {
-                    el.focus();
-                }
-            }, { passive: true });
-            el.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (document.activeElement !== el) {
-                    el.focus();
-                }
-            });
+        function copyTextToClipboard(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+            } catch (e) {}
+            document.body.removeChild(ta);
         }
 
         function escapeHtml(str) {
