@@ -182,7 +182,6 @@
         .postit-card {
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.10), 0 4px 10px -4px rgba(0, 0, 0, 0.06);
             transition: box-shadow 0.2s ease, transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease;
-            touch-action: none;
         }
         .postit-card.dragging {
             box-shadow: 0 22px 40px -8px rgba(0, 0, 0, 0.18), 0 10px 20px -6px rgba(0, 0, 0, 0.10);
@@ -193,9 +192,19 @@
         .postit-header {
             cursor: grab;
             user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
         .postit-header:active {
             cursor: grabbing;
+        }
+
+        /* iPadOS Safari & Chrome Touch/Keyboard Focus Hardening */
+        .ipad-safe-input {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            font-size: 16px !important;
+            touch-action: manipulation;
         }
 
         /* Source message highlight when tethered Post-It is hovered/active */
@@ -236,7 +245,7 @@
         class="fixed md:static inset-y-0 left-0 z-40 bg-[#f0f4f9] flex flex-col justify-between transition-all duration-300 ease-in-out overflow-hidden shrink-0 w-[268px] border-r border-transparent">
 
         <!-- Top: Hamburger + New Chat Pill -->
-        <div class="p-3.5 space-y-4">
+        <div class="p-3.5 space-y-3">
             <div class="flex items-center justify-between">
                 <button onclick="toggleLeftSidebar()" title="Collapse menu"
                     class="w-10 h-10 rounded-full hover:bg-[#e3e8ee] flex items-center justify-center text-[#444746] transition-colors">
@@ -253,6 +262,14 @@
                     <span class="whitespace-nowrap">New chat</span>
                 </button>
             </div>
+
+            <!-- Thread Search Input -->
+            <div class="relative">
+                <i data-lucide="search" class="w-3.5 h-3.5 text-[#444746] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input id="thread-search-input" type="text" oninput="renderRecentThreads()"
+                    placeholder="Search threads..."
+                    class="ipad-safe-input w-full pl-9 pr-3 py-1.5 rounded-full bg-white/80 focus:bg-white border border-slate-200/80 focus:border-blue-400 text-[#1f1f1f] placeholder-[#444746]/70 focus:outline-none transition-colors" />
+            </div>
         </div>
 
         <!-- Middle: Recent Threads List -->
@@ -263,22 +280,22 @@
             </div>
         </div>
 
-        <!-- Bottom: Export / Help / Settings Links (Classic Gemini Footer) -->
+        <!-- Bottom: Export / Sync / Settings Links (Classic Gemini Footer) -->
         <div class="p-3 border-t border-slate-200/70 space-y-0.5 text-sm text-[#1f1f1f]">
             <button onclick="openExportModal()"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
-                <i data-lucide="download" class="w-4 h-4 shrink-0"></i>
-                <span class="truncate">Export thread & notes</span>
+                class="w-full flex items-center gap-3 px-3 py-2 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
+                <i data-lucide="file-text" class="w-4 h-4 shrink-0"></i>
+                <span class="truncate">Export thread (.md)</span>
             </button>
-            <button onclick="showKeyboardHelp()"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
-                <i data-lucide="help-circle" class="w-4 h-4 shrink-0"></i>
-                <span class="truncate">Help & shortcuts</span>
+            <button onclick="openSettingsModal('sync')"
+                class="w-full flex items-center gap-3 px-3 py-2 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
+                <i data-lucide="refresh-cw" class="w-4 h-4 shrink-0"></i>
+                <span class="truncate">Sync & backup (.json)</span>
             </button>
-            <button onclick="resetDemoWorkspace()"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
+            <button onclick="openSettingsModal('api')"
+                class="w-full flex items-center gap-3 px-3 py-2 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
                 <i data-lucide="settings" class="w-4 h-4 shrink-0"></i>
-                <span class="truncate">Reset sample data</span>
+                <span class="truncate">Settings & API key</span>
             </button>
         </div>
     </aside>
@@ -293,25 +310,27 @@
     <div class="flex-1 flex flex-col h-full bg-white relative overflow-hidden">
 
         <!-- Minimal Top Header Bar -->
-        <header class="h-16 px-4 sm:px-6 flex items-center justify-between shrink-0 bg-white/90 backdrop-blur-sm z-20">
-            <div class="flex items-center gap-2.5">
-                <!-- Expand Hamburger (shown when Left Sidebar is collapsed or on mobile) -->
+        <header class="h-16 px-4 sm:px-6 flex items-center justify-between bg-white/90 backdrop-blur-md z-30 shrink-0">
+            <div class="flex items-center gap-3">
+                <!-- Hamburger button visible when left sidebar is collapsed -->
                 <button id="header-menu-btn" onclick="toggleLeftSidebar()" title="Expand menu"
                     class="w-10 h-10 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746] transition-colors">
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
 
-                <!-- Gemini Brand Title -->
-                <div class="flex items-center gap-2 select-none">
-                    <span class="font-display text-[20px] font-medium tracking-tight text-[#1f1f1f]">Gemini</span>
-                    <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#f0f4f9] text-[#444746]">
-                        Thread + Post-Its
-                    </span>
+                <!-- Gemini Brand Title & Clickable Active Model Status Pill -->
+                <div class="flex items-center gap-2">
+                    <span class="font-display text-[20px] font-medium tracking-tight text-[#1f1f1f] select-none">Gemini</span>
+                    <button id="active-model-pill" onclick="openSettingsModal('api')" title="Configure Gemini API key & active model"
+                        class="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#444746] transition-colors">
+                        <span id="model-status-dot" class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        <span id="model-status-label">Demo Mode</span>
+                    </button>
                 </div>
             </div>
 
             <!-- Right Margin Post-It Controls -->
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5 sm:gap-2">
                 <!-- Tidy / Stack Right Button -->
                 <button onclick="tidyStackRight()" title="Neatly align all open Post-Its along the right margin"
                     class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] text-xs font-medium transition-colors">
@@ -329,8 +348,14 @@
 
                 <!-- "+ New Note" Button -->
                 <button onclick="spawnPostItNote({})" title="Pop open a new draggable Post-It clarifier"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#fef7cd] hover:bg-[#fdeea2] border border-amber-300/80 text-amber-950 text-xs font-semibold shadow-2xs transition-all active:scale-95">
-                    <span>📌 + New Note</span>
+                    class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-[#fef7cd] hover:bg-[#fdeea2] border border-amber-300/80 text-amber-950 text-xs font-semibold shadow-2xs transition-all active:scale-95">
+                    <span>📌 + Note</span>
+                </button>
+
+                <!-- Quick Settings Gear Button -->
+                <button onclick="openSettingsModal('api')" title="Settings, API Key & Sync"
+                    class="w-9 h-9 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746] hover:text-[#1f1f1f] transition-colors">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
             </div>
         </header>
@@ -354,17 +379,18 @@
         <!-- Bottom Floating Gemini Pill Prompt Composer -->
         <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-white via-white to-white/0 pt-6 pb-4 px-4 sm:px-8 pointer-events-none z-20">
             <div class="max-w-[740px] mx-auto xl:ml-[max(4rem,calc(50%-480px))] pointer-events-auto">
-                <div class="rounded-[28px] bg-[#f0f4f9] focus-within:bg-white focus-within:shadow-[0_2px_16px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-slate-300 transition-all px-4 py-2.5 flex items-end gap-2">
-                    <button onclick="spawnPostItNote({})" title="Open a side Post-It note without cluttering this thread"
+                <div id="main-composer-shell" onclick="focusElementSafely('main-prompt-input')"
+                    class="rounded-[28px] bg-[#f0f4f9] focus-within:bg-white focus-within:shadow-[0_2px_16px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-slate-300 transition-all px-4 py-2.5 flex items-end gap-2 cursor-text">
+                    <button type="button" onclick="event.stopPropagation(); spawnPostItNote({})" title="Open a side Post-It note without cluttering this thread"
                         class="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-[#444746] shrink-0 transition-colors mb-0.5">
                         <i data-lucide="sticky-note" class="w-4 h-4"></i>
                     </button>
 
                     <textarea id="main-prompt-input" rows="1"
                         placeholder="Ask Gemini..."
-                        class="flex-1 bg-transparent text-[#1f1f1f] placeholder-[#444746]/80 text-[15px] py-2 px-1 focus:outline-none resize-none max-h-40 leading-relaxed"></textarea>
+                        class="ipad-safe-input flex-1 bg-transparent text-[#1f1f1f] placeholder-[#444746]/80 py-1.5 px-1 focus:outline-none resize-none max-h-40 leading-relaxed"></textarea>
 
-                    <button id="main-send-btn" onclick="sendMainMessage()" title="Send message"
+                    <button id="main-send-btn" type="button" onclick="event.stopPropagation(); sendMainMessage()" title="Send message"
                         class="w-9 h-9 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] disabled:opacity-35 disabled:cursor-not-allowed text-white flex items-center justify-center shrink-0 transition-colors mb-0.5 shadow-2xs">
                         <i data-lucide="arrow-up" class="w-4 h-4"></i>
                     </button>
@@ -375,47 +401,154 @@
             </div>
         </div>
 
-        <!-- ================================================================= -->
-        <!-- FLOATING DRAGGABLE POST-IT NOTES LAYER (RIGHT SIDE MARGIN)        -->
-        <!-- ================================================================= -->
-        <div id="postits-layer" class="fixed inset-0 pointer-events-none z-30 overflow-hidden">
-            <!-- Draggable Post-It Note cards are rendered here -->
-        </div>
-
+        <!-- Floating Draggable Post-It Notes Layer -->
+        <div id="postits-layer" class="fixed inset-0 pointer-events-none z-30"></div>
     </div>
 
-    <!-- Export Modal -->
+    <!-- Markdown Export Modal -->
     <div id="export-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-[2px] flex items-center justify-center p-4">
         <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
             <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="gemini-sparkle text-lg">✦</span>
-                    <h3 class="font-display font-semibold text-[#1f1f1f] text-base">Export Thread & Post-It Notes</h3>
+                    <h3 class="font-display font-semibold text-[#1f1f1f] text-base">Export Thread</h3>
                 </div>
                 <button onclick="closeExportModal()" class="w-8 h-8 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746]">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
             <div class="p-6 flex-1 overflow-y-auto space-y-4">
-                <label class="flex items-center gap-2.5 text-sm text-[#444746] cursor-pointer select-none">
-                    <input type="checkbox" id="export-include-notes" checked onchange="updateExportPreview()"
+                <label class="flex items-center gap-2.5 text-sm text-[#1f1f1f] cursor-pointer select-none">
+                    <input id="export-include-notes" type="checkbox" checked onchange="updateExportPreview()"
                         class="w-4 h-4 rounded border-slate-300 text-[#1a73e8] focus:ring-[#1a73e8]">
-                    <span>Append Post-It clarifier notes as structured footnotes</span>
+                    <span>Append Post-It clarifier notes as footnotes</span>
                 </label>
-                <textarea id="export-preview-textarea" readonly rows="13"
-                    class="w-full bg-[#f8fafd] border border-slate-200 rounded-2xl p-4 font-mono text-xs text-[#1f1f1f] focus:outline-none resize-none"></textarea>
+                <textarea id="export-preview-textarea" readonly
+                    class="w-full h-72 rounded-2xl bg-[#f8fafd] border border-slate-200 p-4 font-mono text-xs text-[#1f1f1f] focus:outline-none resize-none leading-relaxed"></textarea>
             </div>
             <div class="px-6 py-4 bg-[#f8fafd] border-t border-slate-100 flex items-center justify-end gap-2.5">
                 <button onclick="copyExportMarkdown()"
-                    class="px-4 py-2 rounded-full bg-white hover:bg-[#f0f4f9] text-[#1f1f1f] border border-slate-300 text-xs font-medium flex items-center gap-1.5 transition-colors">
+                    class="flex items-center gap-2 px-4 py-2 rounded-full bg-white hover:bg-[#f0f4f9] text-[#1f1f1f] border border-slate-300 text-xs font-medium transition-colors">
                     <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                     <span>Copy Markdown</span>
                 </button>
                 <button onclick="downloadExportMarkdown()"
-                    class="px-4 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium flex items-center gap-1.5 transition-colors">
+                    class="flex items-center gap-2 px-5 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium transition-colors shadow-2xs">
                     <i data-lucide="download" class="w-3.5 h-3.5"></i>
                     <span>Download .md</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings, Gemini API & Cross-Device Sync Modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-[2px] flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="gemini-sparkle text-lg">✦</span>
+                    <h3 class="font-display font-semibold text-[#1f1f1f] text-base">Workspace Settings & Sync</h3>
+                </div>
+                <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746]">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="p-6 flex-1 overflow-y-auto space-y-6">
+                <!-- Section 1: Gemini API Key & Model -->
+                <div id="settings-section-api" class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-semibold uppercase tracking-wider text-[#444746]">Gemini API Configuration</h4>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer"
+                            class="text-xs font-medium text-[#1a73e8] hover:underline inline-flex items-center gap-1">
+                            <span>Get free API key</span>
+                            <i data-lucide="external-link" class="w-3 h-3"></i>
+                        </a>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="settings-api-key" class="block text-xs font-medium text-[#1f1f1f]">Google AI Studio API Key</label>
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <input id="settings-api-key" type="password" autocomplete="off"
+                                    placeholder="AIzaSy..."
+                                    class="ipad-safe-input w-full pr-10 pl-3.5 py-2 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] focus:outline-none font-mono" />
+                                <button type="button" onclick="toggleApiKeyVisibility()" title="Show or hide API key"
+                                    class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#444746] hover:text-[#1f1f1f]">
+                                    <i id="api-key-eye-icon" data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <button type="button" id="test-api-btn" onclick="testGeminiConnection()"
+                                class="px-3.5 py-2.5 rounded-xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#1f1f1f] text-xs font-medium shrink-0 transition-colors">
+                                Test
+                            </button>
+                        </div>
+                        <p id="api-test-status" class="text-[11px] text-[#444746]">
+                            Stored strictly in your browser's localStorage—never uploaded anywhere.
+                        </p>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="settings-model-select" class="block text-xs font-medium text-[#1f1f1f]">Active Model</label>
+                        <select id="settings-model-select"
+                            class="ipad-safe-input w-full px-3.5 py-2.5 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] focus:outline-none">
+                            <option value="gemini-4-hydrogen">Gemini 4 Hydrogen — Fast & Free Tier Friendly (Default)</option>
+                            <option value="gemini-4-neon">Gemini 4 Neon — Latest Frontier Flagship</option>
+                            <option value="gemini-4-carbon">Gemini 4 Carbon — Deep Reasoning</option>
+                            <option value="gemini-3.8-flash">Gemini 3.8 Flash — Ultra-Fast</option>
+                            <option value="demo">Demo Mode — Offline Simulated Replies</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100" />
+
+                <!-- Section 2: Cross-Device Sync & Backup -->
+                <div id="settings-section-sync" class="space-y-3.5">
+                    <div>
+                        <h4 class="text-xs font-semibold uppercase tracking-wider text-[#444746]">Cross-Device Sync & Backup</h4>
+                        <p class="text-xs text-[#444746] mt-1">
+                            Move all threads and Post-It notes between iPad Chrome and Windows Desktop Chrome via iCloud Drive or Google Drive.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button type="button" onclick="exportWorkspaceJSON()"
+                            class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#1f1f1f] text-xs font-medium transition-colors">
+                            <i data-lucide="download" class="w-4 h-4 text-[#1a73e8]"></i>
+                            <span>Export Workspace (.json)</span>
+                        </button>
+
+                        <button type="button" onclick="document.getElementById('import-json-input').click()"
+                            class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#1f1f1f] text-xs font-medium transition-colors">
+                            <i data-lucide="upload" class="w-4 h-4 text-[#1a73e8]"></i>
+                            <span>Import Workspace (.json)</span>
+                        </button>
+                        <input id="import-json-input" type="file" accept=".json,application/json" onchange="handleImportWorkspaceJSON(event)" class="hidden" />
+                    </div>
+
+                    <label class="flex items-center gap-2 text-xs text-[#444746] cursor-pointer select-none pt-0.5">
+                        <input id="import-merge-checkbox" type="checkbox" checked class="w-3.5 h-3.5 rounded border-slate-300 text-[#1a73e8]" />
+                        <span>Merge imported threads with existing ones (uncheck to replace)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-[#f8fafd] border-t border-slate-100 flex items-center justify-between gap-2.5">
+                <button type="button" onclick="resetDemoWorkspace()"
+                    class="text-xs font-medium text-rose-600 hover:text-rose-700 px-2 py-1">
+                    Reset sample data
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeSettingsModal()"
+                        class="px-4 py-2 rounded-full bg-white hover:bg-[#f0f4f9] text-[#1f1f1f] border border-slate-300 text-xs font-medium transition-colors">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="saveSettingsFromModal()"
+                        class="px-5 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium transition-colors shadow-2xs">
+                        Save Settings
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -430,9 +563,20 @@
         const STORAGE_KEY = 'gemini_white_postit_sessions_v2';
         const ACTIVE_ID_KEY = 'gemini_white_postit_active_v2';
         const LEFT_SIDEBAR_KEY = 'gemini_white_left_sidebar_v2';
+        const SETTINGS_KEY = 'gemini_white_postit_settings_v2';
 
-        const apiKey = ""; // Provided at runtime in Canvas environment if available
-        const GEMINI_MODEL = "gemini-3-flash-preview";
+        const MODEL_LABELS = {
+            'gemini-4-hydrogen': 'Gemini 4 Hydrogen',
+            'gemini-4-neon': 'Gemini 4 Neon',
+            'gemini-4-carbon': 'Gemini 4 Carbon',
+            'gemini-3.8-flash': 'Gemini 3.8 Flash',
+            'demo': 'Demo Mode'
+        };
+
+        let appSettings = {
+            apiKey: '',
+            model: 'gemini-4-hydrogen'
+        };
 
         const NOTE_THEMES = {
             yellow: {
@@ -609,6 +753,15 @@
 
         function loadState() {
             try {
+                const rawSettings = localStorage.getItem(SETTINGS_KEY);
+                if (rawSettings) {
+                    const parsedSettings = JSON.parse(rawSettings);
+                    appSettings = {
+                        apiKey: parsedSettings.apiKey || '',
+                        model: parsedSettings.model || 'gemini-4-hydrogen'
+                    };
+                }
+
                 const raw = localStorage.getItem(STORAGE_KEY);
                 const savedActive = localStorage.getItem(ACTIVE_ID_KEY);
                 const savedSidebar = localStorage.getItem(LEFT_SIDEBAR_KEY);
@@ -637,6 +790,7 @@
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
                 localStorage.setItem(ACTIVE_ID_KEY, activeSessionId);
+                localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
                 if (window.innerWidth >= 768) {
                     localStorage.setItem(LEFT_SIDEBAR_KEY, String(isLeftSidebarOpen));
                 }
@@ -649,11 +803,34 @@
             return sessions.find(s => s.id === activeSessionId) || sessions[0];
         }
 
+        function updateModelStatusPill() {
+            const dot = document.getElementById('model-status-dot');
+            const label = document.getElementById('model-status-label');
+            const hasKey = Boolean(appSettings.apiKey && appSettings.apiKey.trim());
+            const isLive = hasKey && appSettings.model !== 'demo';
+
+            if (isLive) {
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+                label.textContent = MODEL_LABELS[appSettings.model] || appSettings.model;
+            } else {
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500';
+                label.textContent = hasKey ? 'Demo Mode' : 'Demo Mode (Add Key)';
+            }
+        }
+
         // =========================================================================
         // 2. GEMINI API CALLER WITH SMART BUILT-IN CONTEXTUAL FALLBACK
         // =========================================================================
         async function queryGeminiOrFallback({ contents, systemInstruction, fallbackContext }) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+            const userKey = (appSettings.apiKey || '').trim();
+            const selectedModel = appSettings.model || 'gemini-4-hydrogen';
+
+            if (!userKey || selectedModel === 'demo') {
+                await new Promise(r => setTimeout(r, 450));
+                return generateContextualFallbackReply(fallbackContext);
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:generateContent?key=${encodeURIComponent(userKey)}`;
             const payload = {
                 contents,
                 systemInstruction: {
@@ -670,20 +847,21 @@
                         body: JSON.stringify(payload)
                     });
 
+                    const data = await response.json().catch(() => ({}));
                     if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
+                        const apiErrMsg = data?.error?.message || `HTTP ${response.status}`;
+                        throw new Error(apiErrMsg);
                     }
 
-                    const data = await response.json();
                     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (text) return text;
-                    throw new Error('Empty candidate text');
+                    throw new Error('Empty response from Gemini');
                 } catch (err) {
                     if (attempt < delays.length) {
                         await new Promise(r => setTimeout(r, delays[attempt]));
                     } else {
-                        // Built-in intelligent offline/unauthenticated fallback responder
-                        return generateContextualFallbackReply(fallbackContext);
+                        showToast(`API Notice: ${err.message}`);
+                        return `> **Gemini API Error:** ${escapeHtml(err.message)}\n>\n> Check your API key or model selection in **Settings (⚙️)**, or switch to **Demo Mode** to test offline.\n\n---\n\n${generateContextualFallbackReply(fallbackContext)}`;
                     }
                 }
             }
@@ -697,9 +875,9 @@
                 : 'the current discussion topic';
 
             if (mode === 'postit') {
-                return `Here is a quick clarification${cleanAnchor ? ` regarding ${cleanAnchor}` : ''}:\n\n- **Core takeaway:** In the context of *${topicHint || 'your main thread'}*, **${userQuestion.replace(/\?$/, '')}** acts as a key safeguard so edge cases don't cascade.\n- **Practical rule of thumb:** Keep this isolated as a side detail unless you decide to promote it into the primary architecture.\n\n*(Tip: Connect a Gemini API key in runtime for live model synthesis; offline smart-context mode is active.)*`;
+                return `Here is a quick clarification${cleanAnchor ? ` regarding ${cleanAnchor}` : ''}:\n\n- **Core takeaway:** In the context of *${topicHint || 'your main thread'}*, **${userQuestion.replace(/\?$/, '')}** acts as a key safeguard so edge cases don't cascade.\n- **Practical rule of thumb:** Keep this isolated as a side detail unless you decide to promote it into the primary architecture.\n\n*(Demo Mode active — click **Settings ⚙️** to paste your Gemini API key for live answers.)*`;
             } else {
-                return `### Structured Breakdown: ${userQuestion}\n\nBuilding directly on our discussion:\n\n1. **Core Principle**: Keep the primary architecture clean, modular, and easy to reason about before introducing premature optimizations.\n2. **Key Trade-offs**: Balance latency, operational complexity, and maintainability depending on your expected scale.\n3. **Next Step**: Highlight any specific phrase in this response to pop open a **📌 Post-It** clarifier in the right margin without cluttering this thread.`;
+                return `### Structured Breakdown: ${userQuestion}\n\nBuilding directly on our discussion:\n\n1. **Core Principle**: Keep the primary architecture clean, modular, and easy to reason about before introducing premature optimizations.\n2. **Key Trade-offs**: Balance latency, operational complexity, and maintainability depending on your expected scale.\n3. **Next Step**: Highlight any specific phrase in this response to pop open a **📌 Post-It** clarifier in the right margin without cluttering this thread.\n\n*(Demo Mode active — click the **Demo Mode** pill at the top to connect your Gemini API key.)*`;
             }
         }
 
@@ -723,9 +901,10 @@
                 sidebar.classList.remove('-translate-x-full');
                 if (isMobile) {
                     backdrop.classList.remove('hidden');
+                    if (headerMenuBtn) headerMenuBtn.classList.remove('hidden');
                 } else {
                     backdrop.classList.add('hidden');
-                    headerMenuBtn.classList.add('hidden');
+                    if (headerMenuBtn) headerMenuBtn.classList.add('hidden');
                 }
             } else {
                 if (isMobile) {
@@ -737,13 +916,28 @@
                     sidebar.classList.remove('-translate-x-full');
                     backdrop.classList.add('hidden');
                 }
-                headerMenuBtn.classList.remove('hidden');
+                if (headerMenuBtn) headerMenuBtn.classList.remove('hidden');
             }
         }
 
         function renderRecentThreads() {
             const listEl = document.getElementById('recent-threads-list');
-            listEl.innerHTML = sessions.map(sess => {
+            const query = (document.getElementById('thread-search-input')?.value || '').trim().toLowerCase();
+
+            const filtered = query
+                ? sessions.filter(s =>
+                    s.title.toLowerCase().includes(query) ||
+                    s.messages.some(m => m.content.toLowerCase().includes(query)) ||
+                    (s.notes || []).some(n => n.thread.some(t => t.content.toLowerCase().includes(query)))
+                )
+                : sessions;
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `<div class="px-3 py-3 text-xs text-[#444746]/75">No matching threads</div>`;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(sess => {
                 const isActive = sess.id === activeSessionId;
                 const noteCount = sess.notes?.length || 0;
                 return `
@@ -1232,13 +1426,14 @@
 
                             <!-- Compact Follow-Up Input Box -->
                             <div class="p-2 pt-1">
-                                <div class="flex items-center gap-1.5 rounded-xl bg-white/80 focus-within:bg-white border border-black/10 px-2.5 py-1.5 shadow-2xs">
+                                <div onclick="focusElementSafely('note-input-${note.id}')"
+                                    class="flex items-center gap-1.5 rounded-xl bg-white/80 focus-within:bg-white border border-black/10 px-2.5 py-1.5 shadow-2xs cursor-text">
                                     <input id="note-input-${note.id}" type="text"
                                         onkeydown="if(event.key === 'Enter'){ event.preventDefault(); sendNoteMessage('${note.id}'); }"
                                         placeholder="Ask clarifying follow-up..."
-                                        class="flex-1 bg-transparent text-xs text-slate-900 placeholder-slate-500 focus:outline-none min-w-0" />
-                                    <button onclick="sendNoteMessage('${note.id}')" ${isGenerating ? 'disabled' : ''}
-                                        class="w-6 h-6 rounded-lg bg-slate-900 hover:bg-black disabled:opacity-40 text-white flex items-center justify-center shrink-0 transition-colors">
+                                        class="ipad-safe-input flex-1 bg-transparent text-slate-900 placeholder-slate-500 focus:outline-none min-w-0" />
+                                    <button type="button" onclick="event.stopPropagation(); sendNoteMessage('${note.id}')" ${isGenerating ? 'disabled' : ''}
+                                        class="w-7 h-7 rounded-lg bg-slate-900 hover:bg-black disabled:opacity-40 text-white flex items-center justify-center shrink-0 transition-colors">
                                         <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </div>
@@ -1252,6 +1447,8 @@
             notes.forEach(n => {
                 const scroller = document.getElementById(`note-scroll-${n.id}`);
                 if (scroller) scroller.scrollTop = scroller.scrollHeight;
+                const noteInput = document.getElementById(`note-input-${n.id}`);
+                if (noteInput) attachIPadFocusFix(noteInput);
             });
         }
 
@@ -1686,17 +1883,194 @@ ${mainContext}
         }
 
         // =========================================================================
-        // 9. UTILITIES & INITIALIZATION
+        // 8B. SETTINGS MODAL, API TEST & CROSS-DEVICE JSON SYNC
         // =========================================================================
-        function copyTextToClipboard(text) {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.left = '-9999px';
-            document.body.appendChild(ta);
-            ta.select();
-            try { document.execCommand('copy'); } catch (e) {}
-            document.body.removeChild(ta);
+        function openSettingsModal(focusSection = 'api') {
+            const modal = document.getElementById('settings-modal');
+            const keyInput = document.getElementById('settings-api-key');
+            const modelSelect = document.getElementById('settings-model-select');
+            const statusEl = document.getElementById('api-test-status');
+
+            keyInput.value = appSettings.apiKey || '';
+            keyInput.type = 'password';
+            modelSelect.value = MODEL_LABELS[appSettings.model] ? appSettings.model : 'gemini-4-hydrogen';
+            statusEl.textContent = "Stored strictly in your browser's localStorage—never uploaded anywhere.";
+            statusEl.className = 'text-[11px] text-[#444746]';
+
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+
+            if (focusSection === 'sync') {
+                document.getElementById('settings-section-sync')?.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('settings-api-key');
+            const icon = document.getElementById('api-key-eye-icon');
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            icon.setAttribute('data-lucide', isHidden ? 'eye-off' : 'eye');
+            lucide.createIcons();
+        }
+
+        function saveSettingsFromModal() {
+            const keyVal = document.getElementById('settings-api-key').value.trim();
+            const modelVal = document.getElementById('settings-model-select').value;
+            appSettings.apiKey = keyVal;
+            appSettings.model = modelVal;
+            saveState();
+            updateModelStatusPill();
+            closeSettingsModal();
+            showToast(`Saved settings (${MODEL_LABELS[modelVal] || modelVal})`);
+        }
+
+        async function testGeminiConnection() {
+            const keyVal = document.getElementById('settings-api-key').value.trim();
+            const modelVal = document.getElementById('settings-model-select').value;
+            const statusEl = document.getElementById('api-test-status');
+            const btn = document.getElementById('test-api-btn');
+
+            if (modelVal === 'demo') {
+                statusEl.textContent = 'Demo Mode selected — no API key needed.';
+                statusEl.className = 'text-[11px] text-amber-700 font-medium';
+                return;
+            }
+            if (!keyVal) {
+                statusEl.textContent = 'Please paste your Google AI Studio API key first.';
+                statusEl.className = 'text-[11px] text-rose-600 font-medium';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            statusEl.textContent = `Connecting to ${MODEL_LABELS[modelVal] || modelVal}...`;
+            statusEl.className = 'text-[11px] text-[#444746]';
+
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelVal)}:generateContent?key=${encodeURIComponent(keyVal)}`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ role: 'user', parts: [{ text: 'Reply with the single word: Ready' }] }]
+                    })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    throw new Error(data?.error?.message || `HTTP ${res.status}`);
+                }
+                statusEl.textContent = `✓ Connected successfully to ${MODEL_LABELS[modelVal] || modelVal}!`;
+                statusEl.className = 'text-[11px] text-emerald-700 font-medium';
+            } catch (err) {
+                statusEl.textContent = `✕ Connection failed: ${err.message}`;
+                statusEl.className = 'text-[11px] text-rose-600 font-medium';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test';
+            }
+        }
+
+        function exportWorkspaceJSON() {
+            const backupPayload = {
+                app: 'Gemini Thread + Post-It Sidekick',
+                version: 2,
+                exportedAt: new Date().toISOString(),
+                activeSessionId,
+                sessions
+            };
+            const jsonStr = JSON.stringify(backupPayload, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const dateStamp = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `gemini-workspace-backup-${dateStamp}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Exported full workspace JSON backup');
+        }
+
+        function handleImportWorkspaceJSON(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            const shouldMerge = document.getElementById('import-merge-checkbox')?.checked ?? true;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    const importedSessions = Array.isArray(parsed) ? parsed : parsed.sessions;
+                    if (!Array.isArray(importedSessions) || importedSessions.length === 0) {
+                        throw new Error('No valid threads found in JSON file.');
+                    }
+
+                    if (shouldMerge) {
+                        const existingMap = new Map(sessions.map(s => [s.id, s]));
+                        importedSessions.forEach(imp => {
+                            if (imp && imp.id && Array.isArray(imp.messages)) {
+                                existingMap.set(imp.id, {
+                                    ...imp,
+                                    notes: Array.isArray(imp.notes) ? imp.notes : []
+                                });
+                            }
+                        });
+                        sessions = Array.from(existingMap.values()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+                    } else {
+                        sessions = importedSessions.map(imp => ({
+                            ...imp,
+                            notes: Array.isArray(imp.notes) ? imp.notes : []
+                        }));
+                        activeSessionId = parsed.activeSessionId && sessions.some(s => s.id === parsed.activeSessionId)
+                            ? parsed.activeSessionId
+                            : sessions[0].id;
+                    }
+
+                    saveState();
+                    renderAll();
+                    closeSettingsModal();
+                    showToast(`Imported ${importedSessions.length} thread(s)`);
+                } catch (err) {
+                    showToast(`Import failed: ${err.message}`);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // =========================================================================
+        // 9. UTILITIES, IPADOS FOCUS HELPERS & INITIALIZATION
+        // =========================================================================
+        function focusElementSafely(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            try {
+                el.focus({ preventScroll: false });
+            } catch (e) {
+                el.focus();
+            }
+        }
+
+        function attachIPadFocusFix(el) {
+            if (!el || el.dataset.ipadFocusBound) return;
+            el.dataset.ipadFocusBound = 'true';
+            el.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                if (document.activeElement !== el) {
+                    el.focus();
+                }
+            }, { passive: true });
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (document.activeElement !== el) {
+                    el.focus();
+                }
+            });
         }
 
         function escapeHtml(str) {
@@ -1729,6 +2103,7 @@ ${mainContext}
 
         function renderAll() {
             applyLeftSidebarUI();
+            updateModelStatusPill();
             renderRecentThreads();
             renderMainThread();
             renderPostItNotes();
@@ -1740,6 +2115,10 @@ ${mainContext}
             renderAll();
 
             const mainInput = document.getElementById('main-prompt-input');
+            attachIPadFocusFix(mainInput);
+            attachIPadFocusFix(document.getElementById('thread-search-input'));
+            attachIPadFocusFix(document.getElementById('settings-api-key'));
+
             mainInput.addEventListener('input', () => autoResizeTextarea(mainInput));
             mainInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -1764,6 +2143,7 @@ ${mainContext}
                 }
                 if (e.key === 'Escape') {
                     closeExportModal();
+                    closeSettingsModal();
                     document.getElementById('selection-tooltip').classList.add('hidden');
                 }
             });
