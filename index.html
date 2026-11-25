@@ -2109,6 +2109,13 @@ ${mainContext}
             if (!el || el.dataset.ipadFocusBound) return;
             el.dataset.ipadFocusBound = 'true';
             el.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                if (document.activeElement !== el) {
+                    el.focus();
+                }
+            }, { passive: true });
+        }
+
         function copyTextToClipboard(text) {
             const ta = document.createElement('textarea');
             ta.value = text;
