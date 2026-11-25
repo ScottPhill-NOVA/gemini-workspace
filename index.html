@@ -223,9 +223,15 @@
         .dot-1 { animation: pulseDot 1.4s infinite ease-in-out both; animation-delay: -0.32s; }
         .dot-2 { animation: pulseDot 1.4s infinite ease-in-out both; animation-delay: -0.16s; }
         .dot-3 { animation: pulseDot 1.4s infinite ease-in-out both; }
+
+        /* Dynamic Viewport Height for iPad Safari/Chrome Address Bar */
+        .app-shell {
+            height: 100vh;
+            height: 100dvh;
+        }
     </style>
 </head>
-<body class="bg-white text-[#1f1f1f] font-sans h-screen w-screen overflow-hidden flex selection:bg-blue-100 selection:text-blue-900">
+<body class="app-shell bg-white text-[#1f1f1f] font-sans w-screen overflow-hidden flex selection:bg-blue-100 selection:text-blue-900">
 
     <!-- SVG Overlay for Subtle Visual Tether Lines between Main Messages & Active Post-Its -->
     <svg id="tether-svg" class="fixed inset-0 w-full h-full pointer-events-none z-20">
@@ -310,51 +316,51 @@
     <div class="flex-1 flex flex-col h-full bg-white relative overflow-hidden">
 
         <!-- Minimal Top Header Bar -->
-        <header class="h-16 px-4 sm:px-6 flex items-center justify-between bg-white/90 backdrop-blur-md z-30 shrink-0">
-            <div class="flex items-center gap-3">
+        <header class="h-16 px-3 sm:px-6 flex items-center justify-between gap-2 bg-white/95 backdrop-blur-md z-30 shrink-0 border-b border-slate-100">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                 <!-- Hamburger button visible when left sidebar is collapsed -->
                 <button id="header-menu-btn" onclick="toggleLeftSidebar()" title="Expand menu"
-                    class="w-10 h-10 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746] transition-colors">
+                    class="w-9 h-9 sm:w-10 sm:h-10 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746] shrink-0 transition-colors">
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
 
                 <!-- Gemini Brand Title & Clickable Active Model Status Pill -->
-                <div class="flex items-center gap-2">
-                    <span class="font-display text-[20px] font-medium tracking-tight text-[#1f1f1f] select-none">Gemini</span>
+                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                    <span class="font-display text-[18px] sm:text-[20px] font-medium tracking-tight text-[#1f1f1f] select-none shrink-0">Gemini</span>
                     <button id="active-model-pill" onclick="openSettingsModal('api')" title="Configure Gemini API key & active model"
-                        class="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#444746] transition-colors">
-                        <span id="model-status-dot" class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                        <span id="model-status-label">Demo Mode</span>
+                        class="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#444746] transition-colors truncate max-w-[140px] sm:max-w-none">
+                        <span id="model-status-dot" class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                        <span id="model-status-label" class="truncate">Demo Mode</span>
                     </button>
                 </div>
             </div>
 
             <!-- Right Margin Post-It Controls -->
-            <div class="flex items-center gap-1.5 sm:gap-2">
+            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
                 <!-- Tidy / Stack Right Button -->
                 <button onclick="tidyStackRight()" title="Neatly align all open Post-Its along the right margin"
-                    class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] text-xs font-medium transition-colors">
+                    class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] text-xs font-medium transition-colors">
                     <i data-lucide="align-end-vertical" class="w-3.5 h-3.5"></i>
                     <span>Tidy Right</span>
                 </button>
 
                 <!-- Show/Hide All Post-Its Toggle -->
                 <button id="toggle-notes-visibility-btn" onclick="toggleAllNotesVisibility()" title="Show or hide floating Post-It notes"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] text-xs font-medium transition-colors">
+                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] text-xs font-medium transition-colors">
                     <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                    <span class="hidden md:inline">Notes</span>
+                    <span class="hidden lg:inline">Notes</span>
                     <span id="notes-count-pill" class="px-1.5 py-0.2 rounded-full bg-amber-200/80 text-amber-950 font-mono text-[11px] font-semibold">0</span>
                 </button>
 
                 <!-- "+ New Note" Button -->
                 <button onclick="spawnPostItNote({})" title="Pop open a new draggable Post-It clarifier"
-                    class="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-[#fef7cd] hover:bg-[#fdeea2] border border-amber-300/80 text-amber-950 text-xs font-semibold shadow-2xs transition-all active:scale-95">
+                    class="inline-flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#fef7cd] hover:bg-[#fdeea2] border border-amber-300/80 text-amber-950 text-xs font-semibold shadow-2xs transition-all active:scale-95">
                     <span>📌 + Note</span>
                 </button>
 
-                <!-- Quick Settings Gear Button -->
-                <button onclick="openSettingsModal('api')" title="Settings, API Key & Sync"
-                    class="w-9 h-9 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746] hover:text-[#1f1f1f] transition-colors">
+                <!-- Quick Settings Gear Button (Always Visible) -->
+                <button onclick="openSettingsModal('api')" title="Settings, API Key & Sync" aria-label="Settings"
+                    class="w-9 h-9 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] flex items-center justify-center text-[#1f1f1f] shrink-0 transition-colors">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -369,18 +375,18 @@
         </div>
 
         <!-- Centered Main Conversation Stream -->
-        <main id="main-scroll-area" class="flex-1 overflow-y-auto px-4 sm:px-8 pt-2 pb-36 scroll-smooth">
+        <main id="main-scroll-area" class="flex-1 min-h-0 overflow-y-auto px-4 sm:px-8 pt-4 pb-8 scroll-smooth">
             <!-- Constrained to max-w-3xl and slightly offset left on wide screens to leave airy right margin room for Post-Its -->
             <div id="main-thread-container" class="max-w-[740px] mx-auto xl:ml-[max(4rem,calc(50%-480px))] space-y-8">
                 <!-- Messages injected dynamically -->
             </div>
         </main>
 
-        <!-- Bottom Floating Gemini Pill Prompt Composer -->
-        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-white via-white to-white/0 pt-6 pb-4 px-4 sm:px-8 pointer-events-none z-20">
-            <div class="max-w-[740px] mx-auto xl:ml-[max(4rem,calc(50%-480px))] pointer-events-auto">
+        <!-- Bottom Gemini Pill Prompt Composer (Docked cleanly in flex layout so it never clips off-screen) -->
+        <div class="shrink-0 bg-white border-t border-slate-100/80 pt-2.5 pb-3 px-4 sm:px-8 z-20" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
+            <div class="max-w-[740px] mx-auto xl:ml-[max(4rem,calc(50%-480px))]">
                 <div id="main-composer-shell" onclick="focusElementSafely('main-prompt-input')"
-                    class="rounded-[28px] bg-[#f0f4f9] focus-within:bg-white focus-within:shadow-[0_2px_16px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-slate-300 transition-all px-4 py-2.5 flex items-end gap-2 cursor-text">
+                    class="rounded-[28px] bg-[#f0f4f9] focus-within:bg-white focus-within:shadow-[0_2px_16px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-slate-300 transition-all px-4 py-2 flex items-end gap-2 cursor-text">
                     <button type="button" onclick="event.stopPropagation(); spawnPostItNote({})" title="Open a side Post-It note without cluttering this thread"
                         class="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-[#444746] shrink-0 transition-colors mb-0.5">
                         <i data-lucide="sticky-note" class="w-4 h-4"></i>
@@ -388,14 +394,14 @@
 
                     <textarea id="main-prompt-input" rows="1"
                         placeholder="Ask Gemini..."
-                        class="ipad-safe-input flex-1 bg-transparent text-[#1f1f1f] placeholder-[#444746]/80 py-1.5 px-1 focus:outline-none resize-none max-h-40 leading-relaxed"></textarea>
+                        class="ipad-safe-input flex-1 bg-transparent text-[#1f1f1f] placeholder-[#444746]/80 py-1.5 px-1 focus:outline-none resize-none max-h-36 leading-relaxed"></textarea>
 
                     <button id="main-send-btn" type="button" onclick="event.stopPropagation(); sendMainMessage()" title="Send message"
                         class="w-9 h-9 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] disabled:opacity-35 disabled:cursor-not-allowed text-white flex items-center justify-center shrink-0 transition-colors mb-0.5 shadow-2xs">
                         <i data-lucide="arrow-up" class="w-4 h-4"></i>
                     </button>
                 </div>
-                <div class="text-center mt-2 text-[11px] text-[#444746]/80">
+                <div class="text-center mt-1.5 text-[11px] text-[#444746]/80 truncate">
                     Highlight any text in Gemini's reply to pop open a <span class="font-medium text-[#1f1f1f]">📌 Post-It</span> clarifier in the right margin.
                 </div>
             </div>
@@ -769,7 +775,10 @@
                 const savedSidebar = localStorage.getItem(LEFT_SIDEBAR_KEY);
 
                 if (raw) {
-                    sessions = JSON.parse(raw);
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        sessions = parsed.filter(s => s && typeof s === 'object' && Array.isArray(s.messages));
+                    }
                 }
                 if (!Array.isArray(sessions) || sessions.length === 0) {
                     sessions = buildSampleSessions();
@@ -783,8 +792,10 @@
                     isLeftSidebarOpen = savedSidebar === 'true';
                 }
             } catch (err) {
+                console.warn('Resetting state after load error:', err);
                 sessions = buildSampleSessions();
                 activeSessionId = sessions[0].id;
+                saveState();
             }
         }
 
@@ -2158,32 +2169,35 @@ ${mainContext}
         }
 
         function renderAll() {
-            applyLeftSidebarUI();
-            updateModelStatusPill();
-            renderRecentThreads();
-            renderMainThread();
-            renderPostItNotes();
-            lucide.createIcons();
+            try { applyLeftSidebarUI(); } catch (e) { console.error(e); }
+            try { updateModelStatusPill(); } catch (e) { console.error(e); }
+            try { renderRecentThreads(); } catch (e) { console.error(e); }
+            try { renderMainThread(); } catch (e) { console.error(e); }
+            try { renderPostItNotes(); } catch (e) { console.error(e); }
+            if (window.lucide && typeof lucide.createIcons === 'function') {
+                lucide.createIcons();
+            }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        function initApp() {
             loadState();
             renderAll();
 
             const mainInput = document.getElementById('main-prompt-input');
-            attachIPadFocusFix(mainInput);
+            if (mainInput) {
+                attachIPadFocusFix(mainInput);
+                mainInput.addEventListener('input', () => autoResizeTextarea(mainInput));
+                mainInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMainMessage();
+                    }
+                });
+            }
             attachIPadFocusFix(document.getElementById('thread-search-input'));
             attachIPadFocusFix(document.getElementById('settings-api-key'));
 
-            mainInput.addEventListener('input', () => autoResizeTextarea(mainInput));
-            mainInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMainMessage();
-                }
-            });
-
-            document.getElementById('main-scroll-area').addEventListener('scroll', () => {
+            document.getElementById('main-scroll-area')?.addEventListener('scroll', () => {
                 if (activeTetherNoteId) drawTetherForNote(activeTetherNoteId);
             });
 
@@ -2200,10 +2214,16 @@ ${mainContext}
                 if (e.key === 'Escape') {
                     closeExportModal();
                     closeSettingsModal();
-                    document.getElementById('selection-tooltip').classList.add('hidden');
+                    document.getElementById('selection-tooltip')?.classList.add('hidden');
                 }
             });
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
 </body>
 </html>
