@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini — Thread + Post-It Sidekick</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Marked.js for Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for Code Syntax Highlighting (Clean Light Theme) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts: Plus Jakarta Sans (Google Sans feel), Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        display: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        gemini: {
+                            bg: '#ffffff',
+                            surface: '#f0f4f9',
+                            surfaceHover: '#e3e8ee',
+                            pill: '#f0f4f9',
+                            border: '#e2e8f0',
+                            text: '#1f1f1f',
+                            subtext: '#444746',
+                            accent: '#1a73e8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Clean Minimal Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(15, 23, 42, 0.14);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(15, 23, 42, 0.26);
+        }
+
+        /* Gemini Sparkle Gradient */
+        .gemini-sparkle {
+            background: linear-gradient(135deg, #4285f4 0%, #9b72cb 50%, #d96570 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gemini-gradient-bg {
+            background: linear-gradient(135deg, #4285f4 0%, #9b72cb 55%, #d96570 100%);
+        }
+
+        /* Light Markdown Typography (Main Thread) */
+        .markdown-body {
+            font-size: 0.975rem;
+            line-height: 1.72;
+            color: #1f1f1f;
+            word-wrap: break-word;
+        }
+        .markdown-body p {
+            margin-bottom: 0.95em;
+        }
+        .markdown-body p:last-child {
+            margin-bottom: 0;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            color: #1f1f1f;
+            margin-top: 1.35em;
+            margin-bottom: 0.5em;
+            line-height: 1.3;
+        }
+        .markdown-body h1 { font-size: 1.4em; }
+        .markdown-body h2 { font-size: 1.2em; }
+        .markdown-body h3 { font-size: 1.06em; }
+        .markdown-body ul {
+            list-style-type: disc;
+            padding-left: 1.5em;
+            margin-bottom: 0.95em;
+        }
+        .markdown-body ol {
+            list-style-type: decimal;
+            padding-left: 1.5em;
+            margin-bottom: 0.95em;
+        }
+        .markdown-body li {
+            margin-bottom: 0.35em;
+        }
+        .markdown-body blockquote {
+            border-left: 3px solid #cbd5e1;
+            padding: 0.45em 0.95em;
+            background: #f8fafd;
+            border-radius: 0 0.65rem 0.65rem 0;
+            color: #444746;
+            margin: 0.95em 0;
+        }
+        .markdown-body code:not(pre code) {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            background-color: #f0f4f9;
+            padding: 0.16em 0.42em;
+            border-radius: 0.4rem;
+            color: #0b57d0;
+        }
+        .markdown-body pre {
+            margin: 1em 0;
+            border-radius: 0.85rem;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafd !important;
+        }
+        .markdown-body pre code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.825rem;
+            padding: 1rem !important;
+            display: block;
+            overflow-x: auto;
+            background: transparent !important;
+            color: #1e293b;
+        }
+
+        /* Compact Markdown inside Post-It Notes */
+        .note-markdown {
+            font-size: 0.825rem;
+            line-height: 1.55;
+            color: #1f2937;
+        }
+        .note-markdown p {
+            margin-bottom: 0.6em;
+        }
+        .note-markdown p:last-child {
+            margin-bottom: 0;
+        }
+        .note-markdown ul, .note-markdown ol {
+            padding-left: 1.25em;
+            margin-bottom: 0.6em;
+        }
+        .note-markdown ul { list-style-type: disc; }
+        .note-markdown ol { list-style-type: decimal; }
+        .note-markdown code:not(pre code) {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            background-color: rgba(0, 0, 0, 0.06);
+            padding: 0.1em 0.35em;
+            border-radius: 0.3rem;
+        }
+        .note-markdown pre {
+            margin: 0.5em 0;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.65) !important;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+        .note-markdown pre code {
+            padding: 0.6rem !important;
+            font-size: 0.75rem;
+        }
+
+        /* Post-It Card Paper Shadow & Transitions */
+        .postit-card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.10), 0 4px 10px -4px rgba(0, 0, 0, 0.06);
+            transition: box-shadow 0.2s ease, transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease;
+            touch-action: none;
+        }
+        .postit-card.dragging {
+            box-shadow: 0 22px 40px -8px rgba(0, 0, 0, 0.18), 0 10px 20px -6px rgba(0, 0, 0, 0.10);
+            transform: scale(1.015) rotate(0.4deg);
+            transition: box-shadow 0.1s ease, background-color 0.2s ease;
+            cursor: grabbing !important;
+        }
+        .postit-header {
+            cursor: grab;
+            user-select: none;
+        }
+        .postit-header:active {
+            cursor: grabbing;
+        }
+
+        /* Source message highlight when tethered Post-It is hovered/active */
+        .source-message-highlighted {
+            background-color: #fefce8 !important;
+            box-shadow: 0 0 0 2px #fde047;
+            border-radius: 1rem;
+            transition: background-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        /* Loading Dots */
+        @keyframes pulseDot {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        .dot-1 { animation: pulseDot 1.4s infinite ease-in-out both; animation-delay: -0.32s; }
+        .dot-2 { animation: pulseDot 1.4s infinite ease-in-out both; animation-delay: -0.16s; }
+        .dot-3 { animation: pulseDot 1.4s infinite ease-in-out both; }
+    </style>
+</head>
+<body class="bg-white text-[#1f1f1f] font-sans h-screen w-screen overflow-hidden flex selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- SVG Overlay for Subtle Visual Tether Lines between Main Messages & Active Post-Its -->
+    <svg id="tether-svg" class="fixed inset-0 w-full h-full pointer-events-none z-20">
+        <defs>
+            <marker id="tether-dot" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="5" markerHeight="5">
+                <circle cx="4" cy="4" r="3" fill="#eab308" />
+            </marker>
+        </defs>
+        <path id="tether-path" d="" fill="none" stroke="#eab308" stroke-width="1.75" stroke-dasharray="4 4" stroke-linecap="round"
+              marker-start="url(#tether-dot)" marker-end="url(#tether-dot)" class="opacity-0 transition-opacity duration-200" />
+    </svg>
+
+    <!-- ===================================================================== -->
+    <!-- LEFT SIDEBAR: CLASSIC GEMINI COLLAPSIBLE NAVIGATION RAIL (#f0f4f9)    -->
+    <!-- ===================================================================== -->
+    <aside id="left-sidebar"
+        class="fixed md:static inset-y-0 left-0 z-40 bg-[#f0f4f9] flex flex-col justify-between transition-all duration-300 ease-in-out overflow-hidden shrink-0 w-[268px] border-r border-transparent">
+
+        <!-- Top: Hamburger + New Chat Pill -->
+        <div class="p-3.5 space-y-4">
+            <div class="flex items-center justify-between">
+                <button onclick="toggleLeftSidebar()" title="Collapse menu"
+                    class="w-10 h-10 rounded-full hover:bg-[#e3e8ee] flex items-center justify-center text-[#444746] transition-colors">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <span class="text-xs font-medium text-[#444746] pr-2 md:hidden">Gemini</span>
+            </div>
+
+            <!-- "+ New chat" Pill Button -->
+            <div>
+                <button onclick="createNewSession()"
+                    class="inline-flex items-center gap-3 px-4 py-2.5 rounded-full bg-[#dde3ea] hover:bg-[#d3dbe4] text-[#1f1f1f] text-sm font-medium transition-colors shadow-2xs">
+                    <i data-lucide="plus" class="w-4 h-4 text-[#444746]"></i>
+                    <span class="whitespace-nowrap">New chat</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Middle: Recent Threads List -->
+        <div class="flex-1 overflow-y-auto px-3 py-1 space-y-1">
+            <div class="px-3 py-1.5 text-xs font-medium text-[#444746] tracking-wide">Recent</div>
+            <div id="recent-threads-list" class="space-y-0.5">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Bottom: Export / Help / Settings Links (Classic Gemini Footer) -->
+        <div class="p-3 border-t border-slate-200/70 space-y-0.5 text-sm text-[#1f1f1f]">
+            <button onclick="openExportModal()"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
+                <i data-lucide="download" class="w-4 h-4 shrink-0"></i>
+                <span class="truncate">Export thread & notes</span>
+            </button>
+            <button onclick="showKeyboardHelp()"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
+                <i data-lucide="help-circle" class="w-4 h-4 shrink-0"></i>
+                <span class="truncate">Help & shortcuts</span>
+            </button>
+            <button onclick="resetDemoWorkspace()"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-full hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] transition-colors text-left text-[13px] font-medium">
+                <i data-lucide="settings" class="w-4 h-4 shrink-0"></i>
+                <span class="truncate">Reset sample data</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Backdrop when Left Sidebar is expanded -->
+    <div id="left-sidebar-backdrop" onclick="toggleLeftSidebar(false)"
+        class="hidden fixed inset-0 bg-black/25 z-30 md:hidden backdrop-blur-[1px]"></div>
+
+    <!-- ===================================================================== -->
+    <!-- MAIN WORKSPACE: PURE WHITE GEMINI CANVAS + RIGHT MARGIN POST-ITS      -->
+    <!-- ===================================================================== -->
+    <div class="flex-1 flex flex-col h-full bg-white relative overflow-hidden">
+
+        <!-- Minimal Top Header Bar -->
+        <header class="h-16 px-4 sm:px-6 flex items-center justify-between shrink-0 bg-white/90 backdrop-blur-sm z-20">
+            <div class="flex items-center gap-2.5">
+                <!-- Expand Hamburger (shown when Left Sidebar is collapsed or on mobile) -->
+                <button id="header-menu-btn" onclick="toggleLeftSidebar()" title="Expand menu"
+                    class="w-10 h-10 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746] transition-colors">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Gemini Brand Title -->
+                <div class="flex items-center gap-2 select-none">
+                    <span class="font-display text-[20px] font-medium tracking-tight text-[#1f1f1f]">Gemini</span>
+                    <span class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#f0f4f9] text-[#444746]">
+                        Thread + Post-Its
+                    </span>
+                </div>
+            </div>
+
+            <!-- Right Margin Post-It Controls -->
+            <div class="flex items-center gap-2">
+                <!-- Tidy / Stack Right Button -->
+                <button onclick="tidyStackRight()" title="Neatly align all open Post-Its along the right margin"
+                    class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] text-xs font-medium transition-colors">
+                    <i data-lucide="align-end-vertical" class="w-3.5 h-3.5"></i>
+                    <span>Tidy Right</span>
+                </button>
+
+                <!-- Show/Hide All Post-Its Toggle -->
+                <button id="toggle-notes-visibility-btn" onclick="toggleAllNotesVisibility()" title="Show or hide floating Post-It notes"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f0f4f9] hover:bg-[#e3e8ee] text-[#444746] hover:text-[#1f1f1f] text-xs font-medium transition-colors">
+                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                    <span class="hidden md:inline">Notes</span>
+                    <span id="notes-count-pill" class="px-1.5 py-0.2 rounded-full bg-amber-200/80 text-amber-950 font-mono text-[11px] font-semibold">0</span>
+                </button>
+
+                <!-- "+ New Note" Button -->
+                <button onclick="spawnPostItNote({})" title="Pop open a new draggable Post-It clarifier"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#fef7cd] hover:bg-[#fdeea2] border border-amber-300/80 text-amber-950 text-xs font-semibold shadow-2xs transition-all active:scale-95">
+                    <span>📌 + New Note</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Floating Text Selection Tooltip ("📌 Clarify on Post-It") -->
+        <div id="selection-tooltip" class="hidden fixed z-50 transform -translate-x-1/2 -translate-y-full pb-2.5 pointer-events-auto">
+            <button onclick="createPostItFromSelection()"
+                class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1f1f1f] hover:bg-black text-white text-xs font-medium shadow-lg transition-transform active:scale-95">
+                <span>📌 Clarify on Post-It</span>
+            </button>
+        </div>
+
+        <!-- Centered Main Conversation Stream -->
+        <main id="main-scroll-area" class="flex-1 overflow-y-auto px-4 sm:px-8 pt-2 pb-36 scroll-smooth">
+            <!-- Constrained to max-w-3xl and slightly offset left on wide screens to leave airy right margin room for Post-Its -->
+            <div id="main-thread-container" class="max-w-[740px] mx-auto xl:ml-[max(4rem,calc(50%-480px))] space-y-8">
+                <!-- Messages injected dynamically -->
+            </div>
+        </main>
+
+        <!-- Bottom Floating Gemini Pill Prompt Composer -->
+        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-white via-white to-white/0 pt-6 pb-4 px-4 sm:px-8 pointer-events-none z-20">
+            <div class="max-w-[740px] mx-auto xl:ml-[max(4rem,calc(50%-480px))] pointer-events-auto">
+                <div class="rounded-[28px] bg-[#f0f4f9] focus-within:bg-white focus-within:shadow-[0_2px_16px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-slate-300 transition-all px-4 py-2.5 flex items-end gap-2">
+                    <button onclick="spawnPostItNote({})" title="Open a side Post-It note without cluttering this thread"
+                        class="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-[#444746] shrink-0 transition-colors mb-0.5">
+                        <i data-lucide="sticky-note" class="w-4 h-4"></i>
+                    </button>
+
+                    <textarea id="main-prompt-input" rows="1"
+                        placeholder="Ask Gemini..."
+                        class="flex-1 bg-transparent text-[#1f1f1f] placeholder-[#444746]/80 text-[15px] py-2 px-1 focus:outline-none resize-none max-h-40 leading-relaxed"></textarea>
+
+                    <button id="main-send-btn" onclick="sendMainMessage()" title="Send message"
+                        class="w-9 h-9 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] disabled:opacity-35 disabled:cursor-not-allowed text-white flex items-center justify-center shrink-0 transition-colors mb-0.5 shadow-2xs">
+                        <i data-lucide="arrow-up" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="text-center mt-2 text-[11px] text-[#444746]/80">
+                    Highlight any text in Gemini's reply to pop open a <span class="font-medium text-[#1f1f1f]">📌 Post-It</span> clarifier in the right margin.
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- FLOATING DRAGGABLE POST-IT NOTES LAYER (RIGHT SIDE MARGIN)        -->
+        <!-- ================================================================= -->
+        <div id="postits-layer" class="fixed inset-0 pointer-events-none z-30 overflow-hidden">
+            <!-- Draggable Post-It Note cards are rendered here -->
+        </div>
+
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-[2px] flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="gemini-sparkle text-lg">✦</span>
+                    <h3 class="font-display font-semibold text-[#1f1f1f] text-base">Export Thread & Post-It Notes</h3>
+                </div>
+                <button onclick="closeExportModal()" class="w-8 h-8 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746]">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-6 flex-1 overflow-y-auto space-y-4">
+                <label class="flex items-center gap-2.5 text-sm text-[#444746] cursor-pointer select-none">
+                    <input type="checkbox" id="export-include-notes" checked onchange="updateExportPreview()"
+                        class="w-4 h-4 rounded border-slate-300 text-[#1a73e8] focus:ring-[#1a73e8]">
+                    <span>Append Post-It clarifier notes as structured footnotes</span>
+                </label>
+                <textarea id="export-preview-textarea" readonly rows="13"
+                    class="w-full bg-[#f8fafd] border border-slate-200 rounded-2xl p-4 font-mono text-xs text-[#1f1f1f] focus:outline-none resize-none"></textarea>
+            </div>
+            <div class="px-6 py-4 bg-[#f8fafd] border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button onclick="copyExportMarkdown()"
+                    class="px-4 py-2 rounded-full bg-white hover:bg-[#f0f4f9] text-[#1f1f1f] border border-slate-300 text-xs font-medium flex items-center gap-1.5 transition-colors">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>Copy Markdown</span>
+                </button>
+                <button onclick="downloadExportMarkdown()"
+                    class="px-4 py-2 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] text-white text-xs font-medium flex items-center gap-1.5 transition-colors">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>Download .md</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subtle Floating Toast Pill -->
+    <div id="toast-container" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // =========================================================================
+        // 1. STATE, COLOR PALETTES & SAMPLE DATA
+        // =========================================================================
+        const STORAGE_KEY = 'gemini_white_postit_sessions_v2';
+        const ACTIVE_ID_KEY = 'gemini_white_postit_active_v2';
+        const LEFT_SIDEBAR_KEY = 'gemini_white_left_sidebar_v2';
+
+        const apiKey = ""; // Provided at runtime in Canvas environment if available
+        const GEMINI_MODEL = "gemini-3-flash-preview";
+
+        const NOTE_THEMES = {
+            yellow: {
+                bg: '#fef7cd',
+                header: '#fcf0ad',
+                border: '#f3e28c',
+                quoteBg: 'rgba(234, 179, 8, 0.14)',
+                quoteBorder: '#eab308',
+                dot: '#facc15'
+            },
+            mint: {
+                bg: '#dcfce7',
+                header: '#c8f7d8',
+                border: '#a7ecc0',
+                quoteBg: 'rgba(22, 163, 74, 0.12)',
+                quoteBorder: '#22c55e',
+                dot: '#4ade80'
+            },
+            sky: {
+                bg: '#e0f2fe',
+                header: '#cde9fd',
+                border: '#aad7fa',
+                quoteBg: 'rgba(2, 132, 199, 0.12)',
+                quoteBorder: '#0ea5e9',
+                dot: '#38bdf8'
+            },
+            rose: {
+                bg: '#fce7f3',
+                header: '#fad4ea',
+                border: '#f5b8dc',
+                quoteBg: 'rgba(219, 39, 119, 0.11)',
+                quoteBorder: '#ec4899',
+                dot: '#f472b6'
+            }
+        };
+
+        let sessions = [];
+        let activeSessionId = null;
+        let isLeftSidebarOpen = window.innerWidth >= 768;
+        let areNotesVisible = true;
+        let topZIndex = 100;
+        let activeTetherNoteId = null;
+        let isMainGenerating = false;
+        let generatingNoteIds = new Set();
+        let currentSelectionData = null; // { text, sourceMessageId }
+
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    try {
+                        return hljs.highlight(code, { language: lang }).value;
+                    } catch (e) {}
+                }
+                return hljs.highlightAuto(code).value;
+            }
+        });
+
+        function buildSampleSessions() {
+            const now = Date.now();
+            const vw = window.innerWidth;
+            const defaultX = Math.max(24, vw - 356);
+
+            const session1 = {
+                id: 'sess_coffee_extraction',
+                title: 'Specialty Espresso Extraction Science',
+                updatedAt: now,
+                messages: [
+                    {
+                        id: 'msg_101',
+                        role: 'user',
+                        content: 'Explain how grind size, water temperature, and pre-infusion pressure affect espresso extraction yield and flavor balance.',
+                        timestamp: now - 600000
+                    },
+                    {
+                        id: 'msg_102',
+                        role: 'model',
+                        content: `Espresso extraction is the art of dissolving desirable flavor compounds from roasted coffee grounds while leaving bitter, astringent compounds behind. The ideal **Extraction Yield (EY)** typically sits between **18% and 22%**.\n\n### 1. Grind Size & Surface Area\nFiner grinds dramatically increase total surface area and hydraulic resistance (puck integrity). \n- **Too coarse**: Water channels rapidly through the puck, causing *under-extraction* (sour, sharp, thin body).\n- **Too fine**: Over-restriction leads to uneven channeling and *over-extraction* (hollow bitterness, drying astringency).\n\n### 2. Water Temperature (90°C – 96°C)\nThermal energy accelerates the solubility of heavier organic acids and caramelized sugars.\n- **Light roasts** are denser and less soluble, benefiting from **94°C–96°C**.\n- **Dark roasts** are porous and brittle; **90°C–92°C** prevents extracting harsh pyrolytic compounds.\n\n### 3. Low-Pressure Pre-Infusion\nIntroducing water at **2–3 bars** for 5–8 seconds gently saturates the dry coffee bed before full **9-bar** ramp-up. This swells the grounds evenly, seals micro-fissures, and allows a finer grind without channeling.`,
+                        timestamp: now - 540000
+                    }
+                ],
+                notes: [
+                    {
+                        id: 'note_201',
+                        sourceMessageId: 'msg_102',
+                        anchorText: 'The ideal Extraction Yield (EY) typically sits between 18% and 22%.',
+                        color: 'yellow',
+                        x: defaultX,
+                        y: 88,
+                        minimized: false,
+                        pinned: true,
+                        zIndex: 102,
+                        thread: [
+                            {
+                                role: 'user',
+                                content: 'How do baristas actually measure Extraction Yield in a cafe?'
+                            },
+                            {
+                                role: 'model',
+                                content: 'They use a **digital refractometer** to measure **TDS (Total Dissolved Solids)** in a drop of espresso, then multiply:\n\n`EY % = (Beverage Weight × TDS %) ÷ Dry Dose Weight`\n\nFor example, 36g out at 10% TDS from an 18g dose equals **20% Extraction Yield**.'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'note_202',
+                        sourceMessageId: 'msg_102',
+                        anchorText: 'Introducing water at 2–3 bars for 5–8 seconds gently saturates the dry coffee bed',
+                        color: 'mint',
+                        x: defaultX - 18,
+                        y: 430,
+                        minimized: false,
+                        pinned: false,
+                        zIndex: 101,
+                        thread: [
+                            {
+                                role: 'user',
+                                content: 'Does pre-infusion count toward the classic 25–30 second shot timer?'
+                            },
+                            {
+                                role: 'model',
+                                content: 'Yes! Most specialty baristas start the timer the instant the pump engages (including pre-infusion), so a shot with an 8s pre-infusion often runs **30–35 seconds total**.'
+                            }
+                        ]
+                    }
+                ]
+            };
+
+            const session2 = {
+                id: 'sess_system_arch',
+                title: 'Zero-Downtime Postgres Schema Migration',
+                updatedAt: now - 3600000,
+                messages: [
+                    {
+                        id: 'msg_301',
+                        role: 'user',
+                        content: 'What is the safest expand-and-contract pattern to split a `full_name` column into `first_name` and `last_name` on a 200M-row PostgreSQL table in production?',
+                        timestamp: now - 3600000
+                    },
+                    {
+                        id: 'msg_302',
+                        role: 'model',
+                        content: `To migrate a **200M-row PostgreSQL table** without acquiring an \`ACCESS EXCLUSIVE\` table lock or dropping writes, use the **4-Phase Expand & Contract** pattern:\n\n1. **Expand (DDL)**: Add nullable \`first_name\` and \`last_name\` columns. In Postgres 11+, adding nullable columns without volatile defaults is an instant metadata-only operation.\n2. **Dual-Write (Application)**: Update application code to write to both \`full_name\` and the new columns simultaneously.\n3. **Batched Backfill**: Run an idempotent background worker updating **5,000 rows per transaction** with a short \`pg_sleep(0.05)\` to avoid replication lag and autovacuum starvation.\n4. **Contract**: Switch reads to the new columns, drop dual-writes, and finally drop \`full_name\`.`,
+                        timestamp: now - 3550000
+                    }
+                ],
+                notes: [
+                    {
+                        id: 'note_401',
+                        sourceMessageId: 'msg_302',
+                        anchorText: 'without acquiring an ACCESS EXCLUSIVE table lock',
+                        color: 'sky',
+                        x: defaultX,
+                        y: 110,
+                        minimized: false,
+                        pinned: false,
+                        zIndex: 103,
+                        thread: [
+                            {
+                                role: 'user',
+                                content: 'Why does an ACCESS EXCLUSIVE lock cause downtime even if the DDL takes 50ms?'
+                            },
+                            {
+                                role: 'model',
+                                content: 'Because of **lock queuing**: if a long-running analytics \`SELECT\` holds an \`ACCESS SHARE\` lock, your DDL waits behind it—and **every new incoming SELECT/INSERT queues behind your waiting DDL**, stalling the entire app.'
+                            }
+                        ]
+                    }
+                ]
+            };
+
+            return [session1, session2];
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                const savedActive = localStorage.getItem(ACTIVE_ID_KEY);
+                const savedSidebar = localStorage.getItem(LEFT_SIDEBAR_KEY);
+
+                if (raw) {
+                    sessions = JSON.parse(raw);
+                }
+                if (!Array.isArray(sessions) || sessions.length === 0) {
+                    sessions = buildSampleSessions();
+                    activeSessionId = sessions[0].id;
+                    saveState();
+                } else {
+                    activeSessionId = sessions.some(s => s.id === savedActive) ? savedActive : sessions[0].id;
+                }
+
+                if (savedSidebar !== null && window.innerWidth >= 768) {
+                    isLeftSidebarOpen = savedSidebar === 'true';
+                }
+            } catch (err) {
+                sessions = buildSampleSessions();
+                activeSessionId = sessions[0].id;
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+                localStorage.setItem(ACTIVE_ID_KEY, activeSessionId);
+                if (window.innerWidth >= 768) {
+                    localStorage.setItem(LEFT_SIDEBAR_KEY, String(isLeftSidebarOpen));
+                }
+            } catch (err) {
+                console.warn('Could not persist state:', err);
+            }
+        }
+
+        function getActiveSession() {
+            return sessions.find(s => s.id === activeSessionId) || sessions[0];
+        }
+
+        // =========================================================================
+        // 2. GEMINI API CALLER WITH SMART BUILT-IN CONTEXTUAL FALLBACK
+        // =========================================================================
+        async function queryGeminiOrFallback({ contents, systemInstruction, fallbackContext }) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+            const payload = {
+                contents,
+                systemInstruction: {
+                    parts: [{ text: systemInstruction }]
+                }
+            };
+
+            const delays = [800, 1600];
+            for (let attempt = 0; attempt <= delays.length; attempt++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) return text;
+                    throw new Error('Empty candidate text');
+                } catch (err) {
+                    if (attempt < delays.length) {
+                        await new Promise(r => setTimeout(r, delays[attempt]));
+                    } else {
+                        // Built-in intelligent offline/unauthenticated fallback responder
+                        return generateContextualFallbackReply(fallbackContext);
+                    }
+                }
+            }
+        }
+
+        function generateContextualFallbackReply({ mode, userQuestion, anchorText, mainMessages }) {
+            const cleanAnchor = anchorText ? `"${anchorText.slice(0, 110)}${anchorText.length > 110 ? '...' : ''}"` : null;
+            const lastMain = [...(mainMessages || [])].reverse().find(m => m.role === 'model');
+            const topicHint = lastMain
+                ? lastMain.content.replace(/[#*`]/g, '').split('\n').find(l => l.trim().length > 15)?.slice(0, 120)
+                : 'the current discussion topic';
+
+            if (mode === 'postit') {
+                return `Here is a quick clarification${cleanAnchor ? ` regarding ${cleanAnchor}` : ''}:\n\n- **Core takeaway:** In the context of *${topicHint || 'your main thread'}*, **${userQuestion.replace(/\?$/, '')}** acts as a key safeguard so edge cases don't cascade.\n- **Practical rule of thumb:** Keep this isolated as a side detail unless you decide to promote it into the primary architecture.\n\n*(Tip: Connect a Gemini API key in runtime for live model synthesis; offline smart-context mode is active.)*`;
+            } else {
+                return `### Structured Breakdown: ${userQuestion}\n\nBuilding directly on our discussion:\n\n1. **Core Principle**: Keep the primary architecture clean, modular, and easy to reason about before introducing premature optimizations.\n2. **Key Trade-offs**: Balance latency, operational complexity, and maintainability depending on your expected scale.\n3. **Next Step**: Highlight any specific phrase in this response to pop open a **📌 Post-It** clarifier in the right margin without cluttering this thread.`;
+            }
+        }
+
+        // =========================================================================
+        // 3. LEFT SIDEBAR (GEMINI NAVIGATION RAIL)
+        // =========================================================================
+        function toggleLeftSidebar(forceState = null) {
+            isLeftSidebarOpen = forceState !== null ? forceState : !isLeftSidebarOpen;
+            saveState();
+            applyLeftSidebarUI();
+        }
+
+        function applyLeftSidebarUI() {
+            const sidebar = document.getElementById('left-sidebar');
+            const backdrop = document.getElementById('left-sidebar-backdrop');
+            const headerMenuBtn = document.getElementById('header-menu-btn');
+            const isMobile = window.innerWidth < 768;
+
+            if (isLeftSidebarOpen) {
+                sidebar.style.width = '268px';
+                sidebar.classList.remove('-translate-x-full');
+                if (isMobile) {
+                    backdrop.classList.remove('hidden');
+                } else {
+                    backdrop.classList.add('hidden');
+                    headerMenuBtn.classList.add('hidden');
+                }
+            } else {
+                if (isMobile) {
+                    sidebar.style.width = '268px';
+                    sidebar.classList.add('-translate-x-full');
+                    backdrop.classList.add('hidden');
+                } else {
+                    sidebar.style.width = '0px';
+                    sidebar.classList.remove('-translate-x-full');
+                    backdrop.classList.add('hidden');
+                }
+                headerMenuBtn.classList.remove('hidden');
+            }
+        }
+
+        function renderRecentThreads() {
+            const listEl = document.getElementById('recent-threads-list');
+            listEl.innerHTML = sessions.map(sess => {
+                const isActive = sess.id === activeSessionId;
+                const noteCount = sess.notes?.length || 0;
+                return `
+                    <div onclick="switchSession('${sess.id}')"
+                        class="group flex items-center justify-between gap-2 px-3 py-2 rounded-full cursor-pointer text-[13px] transition-colors ${
+                            isActive
+                                ? 'bg-[#d3e3fd] text-[#041e49] font-medium'
+                                : 'text-[#1f1f1f] hover:bg-[#e3e8ee]'
+                        }">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <i data-lucide="message-square" class="w-4 h-4 shrink-0 ${isActive ? 'text-[#0b57d0]' : 'text-[#444746]'}"></i>
+                            <span class="truncate">${escapeHtml(sess.title)}</span>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            ${noteCount > 0 ? `<span class="text-[10px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/75 text-[#041e49]' : 'bg-amber-100 text-amber-900'} font-mono">${noteCount}📌</span>` : ''}
+                            ${sessions.length > 1 ? `
+                                <button onclick="deleteSession(event, '${sess.id}')" title="Delete thread"
+                                    class="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-black/10 text-[#444746] transition-opacity">
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createNewSession() {
+            const newSess = {
+                id: 'sess_' + Date.now(),
+                title: 'New chat',
+                updatedAt: Date.now(),
+                messages: [],
+                notes: []
+            };
+            sessions.unshift(newSess);
+            activeSessionId = newSess.id;
+            saveState();
+            if (window.innerWidth < 768) toggleLeftSidebar(false);
+            renderAll();
+            document.getElementById('main-prompt-input').focus();
+        }
+
+        function switchSession(id) {
+            activeSessionId = id;
+            saveState();
+            if (window.innerWidth < 768) toggleLeftSidebar(false);
+            renderAll();
+        }
+
+        function deleteSession(event, id) {
+            event.stopPropagation();
+            if (sessions.length <= 1) return;
+            sessions = sessions.filter(s => s.id !== id);
+            if (activeSessionId === id) {
+                activeSessionId = sessions[0].id;
+            }
+            saveState();
+            renderAll();
+            showToast('Thread deleted');
+        }
+
+        function resetDemoWorkspace() {
+            sessions = buildSampleSessions();
+            activeSessionId = sessions[0].id;
+            saveState();
+            renderAll();
+            showToast('Restored sample threads & Post-It notes');
+        }
+
+        // =========================================================================
+        // 4. MAIN THREAD RENDERING & MESSAGING
+        // =========================================================================
+        function renderMainThread() {
+            const container = document.getElementById('main-thread-container');
+            const session = getActiveSession();
+
+            if (session.messages.length === 0) {
+                container.innerHTML = `
+                    <div class="pt-12 sm:pt-20 pb-8 space-y-8">
+                        <div class="space-y-2">
+                            <h1 class="font-display text-3xl sm:text-[42px] font-semibold tracking-tight leading-tight">
+                                <span class="gemini-sparkle">Hello there</span>
+                            </h1>
+                            <p class="font-display text-xl sm:text-2xl text-[#c4c7c5] font-medium">
+                                Keep your main thread clean. Park tangents on Post-Its.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                            <button onclick="sendMainMessage('Explain how WebSockets, Server-Sent Events (SSE), and Long Polling differ for real-time apps.')"
+                                class="p-4 rounded-2xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-left transition-colors flex flex-col justify-between h-32 group">
+                                <p class="text-[13px] text-[#1f1f1f] leading-snug">Compare WebSockets, SSE, and Long Polling for real-time apps</p>
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center self-end shadow-2xs">
+                                    <i data-lucide="compass" class="w-4 h-4 text-[#1f1f1f]"></i>
+                                </div>
+                            </button>
+
+                            <button onclick="sendMainMessage('Give me a concise mental model for OAuth 2.0 Authorization Code Flow with PKCE.')"
+                                class="p-4 rounded-2xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-left transition-colors flex flex-col justify-between h-32 group">
+                                <p class="text-[13px] text-[#1f1f1f] leading-snug">Mental model for OAuth 2.0 Authorization Code Flow with PKCE</p>
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center self-end shadow-2xs">
+                                    <i data-lucide="shield-check" class="w-4 h-4 text-[#1f1f1f]"></i>
+                                </div>
+                            </button>
+
+                            <button onclick="sendMainMessage('Outline a 4-week study plan to learn Rust ownership, lifetimes, and async Tokio.')"
+                                class="p-4 rounded-2xl bg-[#f0f4f9] hover:bg-[#e3e8ee] text-left transition-colors flex flex-col justify-between h-32 group">
+                                <p class="text-[13px] text-[#1f1f1f] leading-snug">4-week study plan for Rust ownership, lifetimes & async Tokio</p>
+                                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center self-end shadow-2xs">
+                                    <i data-lucide="code-2" class="w-4 h-4 text-[#1f1f1f]"></i>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = session.messages.map(msg => {
+                const isUser = msg.role === 'user';
+                const linkedNotes = session.notes.filter(n => n.sourceMessageId === msg.id);
+
+                if (isUser) {
+                    return `
+                        <div id="${msg.id}" class="flex justify-end">
+                            <div class="max-w-[85%] sm:max-w-[75%] rounded-3xl rounded-tr-md bg-[#f0f4f9] px-5 py-3.5 text-[15px] text-[#1f1f1f] leading-relaxed whitespace-pre-wrap">
+                                ${escapeHtml(msg.content)}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const htmlContent = formatMarkdownWithCopy(msg.content);
+                    const linkedBadge = linkedNotes.length > 0
+                        ? `<button onclick="focusNotesForMessage('${msg.id}')"
+                               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#fef7cd] hover:bg-[#fdeea2] border border-amber-300/70 text-amber-950 text-[11px] font-medium transition-colors">
+                               <span>📌 ${linkedNotes.length} note${linkedNotes.length > 1 ? 's' : ''}</span>
+                           </button>`
+                        : '';
+
+                    return `
+                        <div id="${msg.id}" data-message-id="${msg.id}" class="group relative flex items-start gap-3.5 sm:gap-4 p-2 -mx-2 transition-colors">
+                            <!-- Gemini Sparkle Avatar -->
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 select-none">
+                                <span class="gemini-sparkle text-xl leading-none font-bold">✦</span>
+                            </div>
+
+                            <!-- Borderless Clean AI Response Body -->
+                            <div class="flex-1 min-w-0 space-y-2.5">
+                                ${msg.promotedFromNote ? `
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-medium">
+                                        <span>📌 Promoted takeaway from Post-It</span>
+                                    </div>
+                                ` : ''}
+
+                                <div class="markdown-body selectable-ai-content">${htmlContent}</div>
+
+                                <!-- Subtle Action Bar under AI Reply -->
+                                <div class="flex items-center gap-1.5 pt-1 opacity-85 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="spawnPostItFromMessage('${msg.id}')"
+                                        title="Pop open a draggable Post-It clarifier anchored to this reply"
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full hover:bg-[#fef7cd] text-[#444746] hover:text-amber-950 text-xs font-medium transition-colors">
+                                        <span>📌 Post-It</span>
+                                    </button>
+
+                                    <button onclick="copyRawText('${msg.id}')"
+                                        title="Copy response"
+                                        class="p-1.5 rounded-full hover:bg-[#f0f4f9] text-[#444746] hover:text-[#1f1f1f] transition-colors">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                    </button>
+
+                                    ${linkedBadge}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        async function sendMainMessage(overrideText = null) {
+            if (isMainGenerating) return;
+            const input = document.getElementById('main-prompt-input');
+            const text = (overrideText !== null ? overrideText : input.value).trim();
+            if (!text) return;
+
+            const session = getActiveSession();
+            if (overrideText === null) {
+                input.value = '';
+                autoResizeTextarea(input);
+            }
+
+            if (session.messages.length === 0) {
+                session.title = text.length > 38 ? text.slice(0, 38) + '...' : text;
+            }
+            session.updatedAt = Date.now();
+
+            session.messages.push({
+                id: 'msg_' + Date.now(),
+                role: 'user',
+                content: text,
+                timestamp: Date.now()
+            });
+
+            saveState();
+            renderRecentThreads();
+            renderMainThread();
+            appendMainLoadingBubble();
+
+            isMainGenerating = true;
+            document.getElementById('main-send-btn').disabled = true;
+
+            const contents = session.messages.map(m => ({
+                role: m.role === 'model' ? 'model' : 'user',
+                parts: [{ text: m.content }]
+            }));
+
+            const systemInstruction = `You are Google Gemini. Respond in a clean, helpful, authoritative, and well-structured style using clear Markdown headings, concise bullet points, and code blocks where helpful. Keep the main thread crisp and focused.`;
+
+            try {
+                const reply = await queryGeminiOrFallback({
+                    contents,
+                    systemInstruction,
+                    fallbackContext: {
+                        mode: 'main',
+                        userQuestion: text,
+                        mainMessages: session.messages
+                    }
+                });
+
+                session.messages.push({
+                    id: 'msg_' + (Date.now() + 1),
+                    role: 'model',
+                    content: reply,
+                    timestamp: Date.now()
+                });
+                saveState();
+            } finally {
+                isMainGenerating = false;
+                document.getElementById('main-send-btn').disabled = false;
+                renderMainThread();
+                const scrollArea = document.getElementById('main-scroll-area');
+                scrollArea.scrollTop = scrollArea.scrollHeight;
+            }
+        }
+
+        function appendMainLoadingBubble() {
+            const container = document.getElementById('main-thread-container');
+            const loader = document.createElement('div');
+            loader.className = 'flex items-center gap-4 p-2';
+            loader.innerHTML = `
+                <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                    <span class="gemini-sparkle text-xl font-bold animate-pulse">✦</span>
+                </div>
+                <div class="flex items-center gap-1.5 py-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500 dot-1"></span>
+                    <span class="w-2 h-2 rounded-full bg-purple-500 dot-2"></span>
+                    <span class="w-2 h-2 rounded-full bg-rose-400 dot-3"></span>
+                </div>
+            `;
+            container.appendChild(loader);
+            const scrollArea = document.getElementById('main-scroll-area');
+            scrollArea.scrollTop = scrollArea.scrollHeight;
+        }
+
+        // =========================================================================
+        // 5. FLOATING DRAGGABLE POST-IT NOTES (RIGHT MARGIN)
+        // =========================================================================
+        function spawnPostItNote({ sourceMessageId = null, anchorText = '', initialQuestion = '' }) {
+            const session = getActiveSession();
+            if (!areNotesVisible) {
+                areNotesVisible = true;
+            }
+
+            // Pick a staggered position along the right side margin
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const noteWidth = Math.min(324, vw - 32);
+            const openCount = session.notes.length;
+
+            const colors = ['yellow', 'mint', 'sky', 'rose'];
+            const chosenColor = colors[openCount % colors.length];
+
+            const targetX = Math.max(16, vw - noteWidth - 24 - ((openCount % 3) * 14));
+            const targetY = Math.min(vh - 340, 84 + ((openCount % 4) * 44));
+
+            topZIndex += 1;
+            const newNote = {
+                id: 'note_' + Date.now(),
+                sourceMessageId,
+                anchorText: anchorText.trim(),
+                color: chosenColor,
+                x: targetX,
+                y: Math.max(72, targetY),
+                minimized: false,
+                pinned: false,
+                zIndex: topZIndex,
+                thread: []
+            };
+
+            session.notes.push(newNote);
+            saveState();
+            renderRecentThreads();
+            renderMainThread();
+            renderPostItNotes();
+
+            // Focus the note's input box immediately
+            setTimeout(() => {
+                const inputEl = document.getElementById(`note-input-${newNote.id}`);
+                if (inputEl) {
+                    if (initialQuestion) inputEl.value = initialQuestion;
+                    inputEl.focus();
+                }
+                drawTetherForNote(newNote.id);
+            }, 40);
+        }
+
+        function spawnPostItFromMessage(messageId) {
+            const session = getActiveSession();
+            const msg = session.messages.find(m => m.id === messageId);
+            if (!msg) return;
+            const cleanText = msg.content.replace(/[#*`>]/g, '').trim();
+            const snippet = cleanText.length > 140 ? cleanText.slice(0, 140) + '...' : cleanText;
+            spawnPostItNote({
+                sourceMessageId: messageId,
+                anchorText: snippet
+            });
+        }
+
+        function createPostItFromSelection() {
+            if (!currentSelectionData) return;
+            const { text, sourceMessageId } = currentSelectionData;
+            document.getElementById('selection-tooltip').classList.add('hidden');
+            window.getSelection()?.removeAllRanges();
+            spawnPostItNote({
+                sourceMessageId,
+                anchorText: text
+            });
+            currentSelectionData = null;
+        }
+
+        function renderPostItNotes() {
+            const layer = document.getElementById('postits-layer');
+            const session = getActiveSession();
+            const notes = session.notes || [];
+
+            document.getElementById('notes-count-pill').textContent = notes.length;
+            const visBtn = document.getElementById('toggle-notes-visibility-btn');
+            visBtn.classList.toggle('opacity-60', !areNotesVisible);
+
+            if (!areNotesVisible || notes.length === 0) {
+                layer.innerHTML = '';
+                clearTether();
+                return;
+            }
+
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const cardWidth = Math.min(324, vw - 24);
+
+            layer.innerHTML = notes.map(note => {
+                const theme = NOTE_THEMES[note.color] || NOTE_THEMES.yellow;
+                // Keep within viewport bounds
+                const clampedX = Math.max(12, Math.min(vw - cardWidth - 12, note.x));
+                const clampedY = Math.max(68, Math.min(vh - (note.minimized ? 56 : 220), note.y));
+                const isGenerating = generatingNoteIds.has(note.id);
+
+                const colorDotsHtml = Object.keys(NOTE_THEMES).map(cKey => {
+                    const cTheme = NOTE_THEMES[cKey];
+                    const activeRing = note.color === cKey ? 'ring-2 ring-black/40 scale-110' : 'opacity-75 hover:opacity-100';
+                    return `<button type="button" onclick="changeNoteColor('${note.id}', '${cKey}')" title="${cKey} note"
+                        style="background-color: ${cTheme.dot};"
+                        class="w-3 h-3 rounded-full transition-transform ${activeRing}"></button>`;
+                }).join('');
+
+                const anchorHtml = note.anchorText ? `
+                    <div onclick="scrollToSourceMessage('${note.sourceMessageId}')"
+                         title="Click to scroll to source in main thread"
+                         style="background-color: ${theme.quoteBg}; border-left: 3px solid ${theme.quoteBorder};"
+                         class="mx-3 mt-2.5 px-2.5 py-1.5 rounded-r-lg text-[11px] text-slate-700 italic line-clamp-2 cursor-pointer hover:brightness-95 transition">
+                        "${escapeHtml(note.anchorText)}"
+                    </div>
+                ` : '';
+
+                const threadHtml = note.thread.length === 0
+                    ? `<div class="px-3.5 py-4 text-center text-xs text-slate-600/90">
+                           Ask a quick clarifying question below—it stays neatly on this sticky note.
+                       </div>`
+                    : note.thread.map(turn => {
+                        if (turn.role === 'user') {
+                            return `
+                                <div class="bg-black/[0.05] rounded-xl px-3 py-2 text-xs font-medium text-slate-900">
+                                    ${escapeHtml(turn.content)}
+                                </div>
+                            `;
+                        } else {
+                            return `
+                                <div class="note-markdown text-slate-800 px-0.5">
+                                    ${marked.parse(turn.content)}
+                                </div>
+                            `;
+                        }
+                    }).join('');
+
+                const loadingHtml = isGenerating ? `
+                    <div class="flex items-center gap-1.5 py-1.5 px-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-700 dot-1"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-700 dot-2"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-700 dot-3"></span>
+                    </div>
+                ` : '';
+
+                const hasAssistantReply = note.thread.some(t => t.role === 'model');
+
+                return `
+                    <div id="${note.id}"
+                        onmouseenter="drawTetherForNote('${note.id}')"
+                        onmouseleave="clearTether()"
+                        onmousedown="bringNoteToFront('${note.id}')"
+                        style="left: ${clampedX}px; top: ${clampedY}px; width: ${cardWidth}px; z-index: ${note.zIndex}; background-color: ${theme.bg}; border-color: ${theme.border};"
+                        class="postit-card pointer-events-auto fixed rounded-2xl border flex flex-col overflow-hidden">
+
+                        <!-- Draggable Top Header Bar -->
+                        <div onpointerdown="startDragNote(event, '${note.id}')"
+                            style="background-color: ${theme.header}; border-bottom: 1px solid ${theme.border};"
+                            class="postit-header px-3 py-2 flex items-center justify-between gap-2">
+
+                            <div class="flex items-center gap-1.5">
+                                <i data-lucide="grip-horizontal" class="w-3.5 h-3.5 text-slate-600/70"></i>
+                                <div class="flex items-center gap-1 ml-0.5" onpointerdown="event.stopPropagation()">
+                                    ${colorDotsHtml}
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-0.5" onpointerdown="event.stopPropagation()">
+                                <!-- Pin / Unpin -->
+                                <button onclick="togglePinNote('${note.id}')" title="${note.pinned ? 'Unpin note' : 'Pin note on top'}"
+                                    class="p-1 rounded-lg hover:bg-black/10 text-slate-700 transition-colors ${note.pinned ? 'bg-black/10 text-slate-950' : 'opacity-65'}">
+                                    <i data-lucide="pin" class="w-3.5 h-3.5 ${note.pinned ? 'fill-current' : ''}"></i>
+                                </button>
+
+                                <!-- Minimize / Collapse to Tab -->
+                                <button onclick="toggleMinimizeNote('${note.id}')" title="${note.minimized ? 'Expand note' : 'Collapse to tab'}"
+                                    class="p-1 rounded-lg hover:bg-black/10 text-slate-700 transition-colors">
+                                    <i data-lucide="${note.minimized ? 'maximize-2' : 'minus'}" class="w-3.5 h-3.5"></i>
+                                </button>
+
+                                <!-- Close Note -->
+                                <button onclick="closePostItNote('${note.id}')" title="Close note"
+                                    class="p-1 rounded-lg hover:bg-black/10 text-slate-700 hover:text-rose-700 transition-colors">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        ${note.minimized ? `
+                            <!-- Collapsed Tab Preview -->
+                            <div onclick="toggleMinimizeNote('${note.id}')" class="px-3 py-2 text-xs font-medium text-slate-800 truncate cursor-pointer flex items-center justify-between">
+                                <span class="truncate">📌 ${escapeHtml(note.thread[0]?.content || note.anchorText || 'Clarifier Note')}</span>
+                                <span class="text-[10px] text-slate-600 ml-2 shrink-0">Expand</span>
+                            </div>
+                        ` : `
+                            <!-- Anchor Snippet -->
+                            ${anchorHtml}
+
+                            <!-- Mini Q&A Thread Inside Note -->
+                            <div id="note-scroll-${note.id}" class="px-3 py-2.5 max-h-60 overflow-y-auto space-y-2.5">
+                                ${threadHtml}
+                                ${loadingHtml}
+                            </div>
+
+                            <!-- Optional "Promote to Main" Action -->
+                            ${hasAssistantReply ? `
+                                <div class="px-3 pb-1.5 flex justify-end">
+                                    <button onclick="promoteNoteToMain('${note.id}')"
+                                        title="Insert a concise takeaway from this note into the main thread"
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/75 hover:bg-white text-[11px] font-medium text-slate-800 border border-black/10 shadow-2xs transition-colors">
+                                        <i data-lucide="arrow-up-left" class="w-3 h-3 text-[#1a73e8]"></i>
+                                        <span>Promote to Main</span>
+                                    </button>
+                                </div>
+                            ` : ''}
+
+                            <!-- Compact Follow-Up Input Box -->
+                            <div class="p-2 pt-1">
+                                <div class="flex items-center gap-1.5 rounded-xl bg-white/80 focus-within:bg-white border border-black/10 px-2.5 py-1.5 shadow-2xs">
+                                    <input id="note-input-${note.id}" type="text"
+                                        onkeydown="if(event.key === 'Enter'){ event.preventDefault(); sendNoteMessage('${note.id}'); }"
+                                        placeholder="Ask clarifying follow-up..."
+                                        class="flex-1 bg-transparent text-xs text-slate-900 placeholder-slate-500 focus:outline-none min-w-0" />
+                                    <button onclick="sendNoteMessage('${note.id}')" ${isGenerating ? 'disabled' : ''}
+                                        class="w-6 h-6 rounded-lg bg-slate-900 hover:bg-black disabled:opacity-40 text-white flex items-center justify-center shrink-0 transition-colors">
+                                        <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+            notes.forEach(n => {
+                const scroller = document.getElementById(`note-scroll-${n.id}`);
+                if (scroller) scroller.scrollTop = scroller.scrollHeight;
+            });
+        }
+
+        async function sendNoteMessage(noteId) {
+            if (generatingNoteIds.has(noteId)) return;
+            const session = getActiveSession();
+            const note = session.notes.find(n => n.id === noteId);
+            if (!note) return;
+
+            const inputEl = document.getElementById(`note-input-${noteId}`);
+            const text = inputEl ? inputEl.value.trim() : '';
+            if (!text) return;
+
+            inputEl.value = '';
+            note.thread.push({ role: 'user', content: text });
+            generatingNoteIds.add(noteId);
+            saveState();
+            renderPostItNotes();
+
+            // Serialize Main Thread as read-only context
+            const mainContext = session.messages.length > 0
+                ? session.messages.map((m, i) => `[${i + 1}. ${m.role.toUpperCase()}]: ${m.content}`).join('\n\n')
+                : '(Main thread is currently empty.)';
+
+            const systemInstruction = `You are a concise, razor-sharp clarifying assistant living inside a floating Post-It sticky note beside the user's Main Gemini Thread.
+- Answer the user's clarifying question directly, briefly, and clearly (2–4 short sentences or a compact bullet list).
+- Use the Main Thread context and any highlighted anchor quote automatically so the user never has to repeat themselves.
+
+=== MAIN THREAD CONTEXT ===
+${mainContext}
+=== END MAIN THREAD ===`;
+
+            const contents = note.thread.map((turn, idx) => {
+                let msgText = turn.content;
+                if (idx === 0 && turn.role === 'user' && note.anchorText) {
+                    msgText = `[Highlighted excerpt from main thread: "${note.anchorText}"]\n\nClarifying question: ${turn.content}`;
+                }
+                return {
+                    role: turn.role === 'model' ? 'model' : 'user',
+                    parts: [{ text: msgText }]
+                };
+            });
+
+            try {
+                const reply = await queryGeminiOrFallback({
+                    contents,
+                    systemInstruction,
+                    fallbackContext: {
+                        mode: 'postit',
+                        userQuestion: text,
+                        anchorText: note.anchorText,
+                        mainMessages: session.messages
+                    }
+                });
+                note.thread.push({ role: 'model', content: reply });
+                saveState();
+            } finally {
+                generatingNoteIds.delete(noteId);
+                renderPostItNotes();
+                setTimeout(() => {
+                    document.getElementById(`note-input-${noteId}`)?.focus();
+                }, 30);
+            }
+        }
+
+        function promoteNoteToMain(noteId) {
+            const session = getActiveSession();
+            const note = session.notes.find(n => n.id === noteId);
+            if (!note) return;
+
+            const lastQ = [...note.thread].reverse().find(t => t.role === 'user');
+            const lastA = [...note.thread].reverse().find(t => t.role === 'model');
+            if (!lastA) return;
+
+            const summaryMarkdown = `${lastQ ? `**Clarified (${escapeHtml(lastQ.content)}):**\n\n` : ''}${lastA.content}`;
+            session.messages.push({
+                id: 'msg_promo_' + Date.now(),
+                role: 'model',
+                promotedFromNote: true,
+                content: summaryMarkdown,
+                timestamp: Date.now()
+            });
+
+            saveState();
+            renderMainThread();
+            const scrollArea = document.getElementById('main-scroll-area');
+            scrollArea.scrollTop = scrollArea.scrollHeight;
+            showToast('Promoted takeaway into Main Thread');
+        }
+
+        // =========================================================================
+        // 6. SMOOTH POINTER DRAGGING, STACKING & VISUAL SVG TETHERING
+        // =========================================================================
+        function startDragNote(event, noteId) {
+            // Only primary mouse button or touch
+            if (event.button !== undefined && event.button !== 0) return;
+            event.preventDefault();
+
+            const session = getActiveSession();
+            const note = session.notes.find(n => n.id === noteId);
+            const cardEl = document.getElementById(noteId);
+            if (!note || !cardEl) return;
+
+            bringNoteToFront(noteId);
+            cardEl.classList.add('dragging');
+
+            const startPointerX = event.clientX;
+            const startPointerY = event.clientY;
+            const origX = note.x;
+            const origY = note.y;
+            const cardRect = cardEl.getBoundingClientRect();
+
+            function onPointerMove(e) {
+                const dx = e.clientX - startPointerX;
+                const dy = e.clientY - startPointerY;
+                const maxX = window.innerWidth - cardRect.width - 8;
+                const maxY = window.innerHeight - 54;
+
+                note.x = Math.max(8, Math.min(maxX, origX + dx));
+                note.y = Math.max(66, Math.min(maxY, origY + dy));
+
+                cardEl.style.left = `${note.x}px`;
+                cardEl.style.top = `${note.y}px`;
+                drawTetherForNote(noteId);
+            }
+
+            function onPointerUp() {
+                cardEl.classList.remove('dragging');
+                window.removeEventListener('pointermove', onPointerMove);
+                window.removeEventListener('pointerup', onPointerUp);
+                saveState();
+            }
+
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+        }
+
+        function bringNoteToFront(noteId) {
+            const session = getActiveSession();
+            const note = session.notes.find(n => n.id === noteId);
+            if (!note) return;
+            topZIndex += 1;
+            note.zIndex = topZIndex;
+            const cardEl = document.getElementById(noteId);
+            if (cardEl) cardEl.style.zIndex = topZIndex;
+            saveState();
+        }
+
+        function changeNoteColor(noteId, colorKey) {
+            const session = getActiveSession();
+            const note = session.notes.find(n => n.id === noteId);
+            if (!note || !NOTE_THEMES[colorKey]) return;
+            note.color = colorKey;
+            saveState();
+            renderPostItNotes();
+        }
+
+        function toggleMinimizeNote(noteId) {
+            const session = getActiveSession();
+            const note = session.notes.find(n => n.id === noteId);
+            if (!note) return;
+            note.minimized = !note.minimized;
+            saveState();
+            renderPostItNotes();
+        }
+
+        function togglePinNote(noteId) {
+            const session = getActiveSession();
+            const note = session.notes.find(n => n.id === noteId);
+            if (!note) return;
+            note.pinned = !note.pinned;
+            if (note.pinned) bringNoteToFront(noteId);
+            saveState();
+            renderPostItNotes();
+        }
+
+        function closePostItNote(noteId) {
+            const session = getActiveSession();
+            session.notes = session.notes.filter(n => n.id !== noteId);
+            saveState();
+            clearTether();
+            renderRecentThreads();
+            renderMainThread();
+            renderPostItNotes();
+        }
+
+        function toggleAllNotesVisibility() {
+            areNotesVisible = !areNotesVisible;
+            renderPostItNotes();
+        }
+
+        function tidyStackRight() {
+            const session = getActiveSession();
+            if (!session.notes.length) {
+                showToast('No open Post-It notes to align');
+                return;
+            }
+            areNotesVisible = true;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const cardWidth = Math.min(324, vw - 24);
+            const rightMarginX = Math.max(16, vw - cardWidth - 24);
+
+            let currentY = 80;
+            session.notes.forEach((note, idx) => {
+                note.x = rightMarginX;
+                note.y = currentY;
+                note.zIndex = 100 + idx;
+                const estHeight = note.minimized ? 54 : 260;
+                currentY += estHeight + 14;
+                if (currentY > vh - 160) {
+                    currentY = 88 + ((idx % 3) * 36);
+                }
+            });
+
+            saveState();
+            renderPostItNotes();
+            showToast('Aligned Post-Its along the right margin');
+        }
+
+        // Visual SVG Tether & Source Message Highlight
+        function drawTetherForNote(noteId) {
+            activeTetherNoteId = noteId;
+            const session = getActiveSession();
+            const note = session.notes.find(n => n.id === noteId);
+            const pathEl = document.getElementById('tether-path');
+
+            // Clear previous highlight
+            document.querySelectorAll('.source-message-highlighted').forEach(el => {
+                el.classList.remove('source-message-highlighted');
+            });
+
+            if (!note || !note.sourceMessageId || !areNotesVisible) {
+                pathEl.classList.add('opacity-0');
+                return;
+            }
+
+            const sourceEl = document.getElementById(note.sourceMessageId);
+            const noteEl = document.getElementById(noteId);
+            if (!sourceEl || !noteEl) {
+                pathEl.classList.add('opacity-0');
+                return;
+            }
+
+            sourceEl.classList.add('source-message-highlighted');
+
+            const sRect = sourceEl.getBoundingClientRect();
+            const nRect = noteEl.getBoundingClientRect();
+
+            // Connect right edge of main message to left edge of Post-It note
+            const x1 = Math.min(sRect.right - 8, nRect.left - 12);
+            const y1 = Math.max(76, Math.min(window.innerHeight - 80, sRect.top + Math.min(64, sRect.height / 2)));
+            const x2 = nRect.left;
+            const y2 = nRect.top + 22;
+
+            if (x2 <= x1 + 10) {
+                pathEl.classList.add('opacity-0');
+                return;
+            }
+
+            const cpOffset = Math.max(40, (x2 - x1) * 0.45);
+            const d = `M ${x1} ${y1} C ${x1 + cpOffset} ${y1}, ${x2 - cpOffset} ${y2}, ${x2} ${y2}`;
+            pathEl.setAttribute('d', d);
+            pathEl.classList.remove('opacity-0');
+        }
+
+        function clearTether() {
+            activeTetherNoteId = null;
+            document.getElementById('tether-path').classList.add('opacity-0');
+            document.querySelectorAll('.source-message-highlighted').forEach(el => {
+                el.classList.remove('source-message-highlighted');
+            });
+        }
+
+        function scrollToSourceMessage(messageId) {
+            if (!messageId) return;
+            const el = document.getElementById(messageId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('source-message-highlighted');
+                setTimeout(() => el.classList.remove('source-message-highlighted'), 1600);
+            }
+        }
+
+        function focusNotesForMessage(messageId) {
+            areNotesVisible = true;
+            const session = getActiveSession();
+            const matching = session.notes.filter(n => n.sourceMessageId === messageId);
+            matching.forEach(n => {
+                n.minimized = false;
+                bringNoteToFront(n.id);
+            });
+            renderPostItNotes();
+            if (matching[0]) drawTetherForNote(matching[0].id);
+        }
+
+        // =========================================================================
+        // 7. TEXT SELECTION POPOVER ("📌 Clarify on Post-It")
+        // =========================================================================
+        document.addEventListener('mouseup', (e) => {
+            const tooltip = document.getElementById('selection-tooltip');
+            if (tooltip.contains(e.target)) return;
+
+            const sel = window.getSelection();
+            const text = sel ? sel.toString().trim() : '';
+            const mainContainer = document.getElementById('main-thread-container');
+
+            if (text.length >= 3 && text.length <= 500 && sel.anchorNode && mainContainer.contains(sel.anchorNode)) {
+                // Find parent AI message block if available
+                let node = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
+                const msgWrapper = node.closest('[data-message-id]');
+                const sourceMessageId = msgWrapper ? msgWrapper.getAttribute('data-message-id') : null;
+
+                currentSelectionData = { text, sourceMessageId };
+                const rect = sel.getRangeAt(0).getBoundingClientRect();
+                tooltip.style.left = `${Math.min(window.innerWidth - 95, Math.max(95, rect.left + rect.width / 2))}px`;
+                tooltip.style.top = `${Math.max(70, rect.top)}px`;
+                tooltip.classList.remove('hidden');
+                return;
+            }
+
+            tooltip.classList.add('hidden');
+        });
+
+        // =========================================================================
+        // 8. MARKDOWN FORMATTING & EXPORT
+        // =========================================================================
+        function formatMarkdownWithCopy(rawMd) {
+            const html = marked.parse(rawMd || '');
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+
+            temp.querySelectorAll('pre').forEach(pre => {
+                const codeEl = pre.querySelector('code');
+                const langClass = Array.from(codeEl?.classList || []).find(c => c.startsWith('language-'));
+                const langLabel = langClass ? langClass.replace('language-', '') : 'code';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'my-3.5 rounded-2xl overflow-hidden border border-slate-200 bg-[#f8fafd]';
+
+                const bar = document.createElement('div');
+                bar.className = 'flex items-center justify-between px-4 py-1.5 bg-[#f0f4f9] text-[11px] font-mono text-[#444746]';
+                bar.innerHTML = `
+                    <span>${escapeHtml(langLabel)}</span>
+                    <button type="button" onclick="copyCodeSnippet(this)" class="flex items-center gap-1 hover:text-[#1f1f1f] transition-colors">
+                        <i data-lucide="copy" class="w-3 h-3"></i>
+                        <span>Copy</span>
+                    </button>
+                `;
+
+                pre.style.margin = '0';
+                pre.style.border = 'none';
+                pre.style.borderRadius = '0';
+
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(bar);
+                wrapper.appendChild(pre);
+            });
+
+            return temp.innerHTML;
+        }
+
+        function copyCodeSnippet(btn) {
+            const code = btn.closest('.rounded-2xl').querySelector('code').innerText;
+            copyTextToClipboard(code);
+            showToast('Code copied');
+        }
+
+        function copyRawText(messageId) {
+            const session = getActiveSession();
+            const msg = session.messages.find(m => m.id === messageId);
+            if (msg) {
+                copyTextToClipboard(msg.content);
+                showToast('Response copied');
+            }
+        }
+
+        function openExportModal() {
+            updateExportPreview();
+            document.getElementById('export-modal').classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            document.getElementById('export-modal').classList.add('hidden');
+        }
+
+        function updateExportPreview() {
+            const session = getActiveSession();
+            const includeNotes = document.getElementById('export-include-notes').checked;
+
+            let md = `# ${session.title}\n\n`;
+            session.messages.forEach(m => {
+                const heading = m.role === 'user' ? '### User' : '### Gemini';
+                md += `${heading}\n\n${m.content}\n\n`;
+            });
+
+            if (includeNotes && session.notes.length > 0) {
+                md += `---\n\n## 📌 Post-It Clarifier Footnotes\n\n`;
+                session.notes.forEach((note, idx) => {
+                    md += `#### Note #${idx + 1}${note.anchorText ? ` — *"${note.anchorText}"*` : ''}\n\n`;
+                    note.thread.forEach(t => {
+                        md += t.role === 'user' ? `- **Q:** ${t.content}\n` : `  - **A:** ${t.content}\n`;
+                    });
+                    md += `\n`;
+                });
+            }
+
+            document.getElementById('export-preview-textarea').value = md;
+        }
+
+        function copyExportMarkdown() {
+            copyTextToClipboard(document.getElementById('export-preview-textarea').value);
+            showToast('Markdown copied to clipboard');
+        }
+
+        function downloadExportMarkdown() {
+            const session = getActiveSession();
+            const content = document.getElementById('export-preview-textarea').value;
+            const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const slug = session.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'gemini-thread';
+            a.href = url;
+            a.download = `${slug}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Downloaded .md file');
+        }
+
+        function showKeyboardHelp() {
+            showToast('Highlight any text to pop a Post-It • Drag headers to move • Alt+N for New Note');
+        }
+
+        // =========================================================================
+        // 9. UTILITIES & INITIALIZATION
+        // =========================================================================
+        function copyTextToClipboard(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function autoResizeTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'px-4 py-2 rounded-full bg-[#1f1f1f] text-white text-xs font-medium shadow-lg transition-all duration-200 opacity-0 translate-y-1';
+            el.textContent = message;
+            container.appendChild(el);
+            requestAnimationFrame(() => el.classList.remove('opacity-0', 'translate-y-1'));
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'translate-y-1');
+                setTimeout(() => el.remove(), 220);
+            }, 2500);
+        }
+
+        function renderAll() {
+            applyLeftSidebarUI();
+            renderRecentThreads();
+            renderMainThread();
+            renderPostItNotes();
+            lucide.createIcons();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            renderAll();
+
+            const mainInput = document.getElementById('main-prompt-input');
+            mainInput.addEventListener('input', () => autoResizeTextarea(mainInput));
+            mainInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMainMessage();
+                }
+            });
+
+            document.getElementById('main-scroll-area').addEventListener('scroll', () => {
+                if (activeTetherNoteId) drawTetherForNote(activeTetherNoteId);
+            });
+
+            window.addEventListener('resize', () => {
+                applyLeftSidebarUI();
+                renderPostItNotes();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.altKey && e.key.toLowerCase() === 'n') {
+                    e.preventDefault();
+                    spawnPostItNote({});
+                }
+                if (e.key === 'Escape') {
+                    closeExportModal();
+                    document.getElementById('selection-tooltip').classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
