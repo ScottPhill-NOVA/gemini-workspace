@@ -864,11 +864,12 @@
                 return `
                     <div id="msg-${msg.id}" class="flex items-start gap-3.5">
                         <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#4285f4] via-[#9b72cb] to-[#d96570] text-white flex items-center justify-center text-sm shrink-0 mt-0.5">✦</div>
-                        <div class="pt-2 flex items-center gap-2 text-xs text-[#5f6368]">
+                        <div class="pt-2 flex flex-wrap items-center gap-2 text-xs text-[#5f6368]">
                             <span class="w-2 h-2 rounded-full bg-[#4285f4] typing-dot"></span>
                             <span class="w-2 h-2 rounded-full bg-[#9b72cb] typing-dot"></span>
                             <span class="w-2 h-2 rounded-full bg-[#d96570] typing-dot"></span>
                             <span>${escapeHtml(msg.statusText || 'Thinking...')}</span>
+                            <button type="button" onclick="cancelActiveRequest()" class="ml-1 px-2.5 py-0.5 rounded-full bg-[#f0f4f9] hover:bg-rose-100 text-[#444746] hover:text-rose-700 text-[11px] font-medium transition-colors">Stop</button>
                         </div>
                     </div>
                 `;
@@ -968,14 +969,15 @@
                 const reader = new FileReader();
                 reader.onload = () => {
                     const dataUrl = String(reader.result || '');
-                    const base64 = dataUrl.split(',')[1] || '';
-                    resolve({
-                        kind: 'image',
-                        name: file.name || 'screenshot.png',
-                        mimeType: file.type || 'image/png',
-                        data: base64
-                    });
-                };
+    let pendingSelectionMessageId = null;
+    let activeDrag = null;
+    let pendingAttachments = [];
+    let activeAbortController = null;
+    let appSettings = {
+        apiKey: '',
+        model: 'gemini-4-hydrogen',
+        noteModel: 'gemini-2.5-flash'
+    };
                 reader.onerror = () => resolve(null);
                 reader.readAsDataURL(file);
             } else {
@@ -1082,11 +1084,12 @@
         const historyForApi = sess.messages.filter(m => !m.isTyping);
         let result;
         try {
-            result = await queryGeminiOrFallback(historyForApi, null, (attempt, max) => {
-                retryPrefix = `Server busy, retrying (${attempt}/${max})...`;
+            result = await queryGeminiOrFallback(historyForApi, null, (attempt, max, reason) => {
+                retryPrefix = `${reason || 'Server busy'}, retrying (${attempt}/${max})`;
             });
         } finally {
             clearInterval(elapsedTimer);
+            activeAbortController = null;
         }
 
         sess.messages = sess.messages.filter(m => m.id !== typingId);
@@ -1105,10 +1108,10 @@
         scrollMainToBottom();
     }
 
-    function scrollMainToBottom() {
-        const scrollEl = document.getElementById('main-thread-scroll');
-        if (scrollEl) {
-            scrollEl.scrollTop = scrollEl.scrollHeight;
+    function cancelActiveRequest() {
+        if (activeAbortController) {
+            activeAbortController._userCancelled = true;
+            activeAbortController.abort();
         }
     }
 
@@ -1447,9 +1450,12 @@
     // =========================================================================
     // GEMINI API + AUTOMATIC 3X SAME-MODEL RETRY
     // =========================================================================
-    async function fetchWithTimeout(url, options, timeoutMs = 28000) {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), timeoutMs);
+    async function fetchWithTimeout(url, options, timeoutMs = 28000, externalController = null) {
+        const controller = externalController || new AbortController();
+        const id = setTimeout(() => {
+            controller._timedOut = true;
+            controller.abort();
+        }, timeoutMs);
         try {
             return await fetch(url, { ...options, signal: controller.signal });
         } finally {
@@ -1534,26 +1540,31 @@
         };
 
         const maxRetries = 3;
+        let lastErrorDetail = '';
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            const reqController = !sideNote ? new AbortController() : null;
+            if (reqController) activeAbortController = reqController;
+
             try {
                 const res = await fetchWithTimeout(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
-                }, 180000);
+                }, 180000, reqController);
 
                 const data = await res.json().catch(() => ({}));
 
                 if (!res.ok) {
                     const errMsg = data?.error?.message || `HTTP ${res.status}`;
+                    lastErrorDetail = `HTTP ${res.status}: ${errMsg}`;
                     const isTransient = res.status === 429 || res.status === 500 || res.status === 503 || res.status === 504;
                     if (isTransient && attempt < maxRetries) {
-                        if (onRetryStatus) onRetryStatus(attempt, maxRetries);
+                        if (onRetryStatus) onRetryStatus(attempt, maxRetries, `HTTP ${res.status} (${errMsg.slice(0, 45)})`);
                         await new Promise(r => setTimeout(r, 1500 * attempt));
                         continue;
                     }
                     return {
-                        text: `**Gemini API Error (${cleanModel}):** ${errMsg}\n\nCheck your API key or model selection in **Settings (⚙️)**.`,
+                        text: `**Gemini API Error (${cleanModel}):** ${lastErrorDetail}\n\n*Tip: Preview models like Neon occasionally saturate; if it stays busy, switch to **gemini-4-hydrogen** or **gemini-2.5-pro** in Settings (⚙️).*`,
                         modelUsed: cleanModel
                     };
                 }
@@ -1569,13 +1580,23 @@
                     tokenInfo
                 };
             } catch (err) {
+                if (reqController?._userCancelled) {
+                    return {
+                        text: `*Request cancelled.*`,
+                        modelUsed: cleanModel
+                    };
+                }
+                const reason = reqController?._timedOut
+                    ? 'Timed out after 180s'
+                    : (err.message || 'Network connection interrupted (iPadOS suspends fetches if screen locks or tab backgrounds)');
+                lastErrorDetail = reason;
                 if (attempt < maxRetries) {
-                    if (onRetryStatus) onRetryStatus(attempt, maxRetries);
+                    if (onRetryStatus) onRetryStatus(attempt, maxRetries, reason);
                     await new Promise(r => setTimeout(r, 1500 * attempt));
                     continue;
                 }
                 return {
-                    text: `**Network / Timeout Error:** ${err.name === 'AbortError' ? 'Request timed out after 180s.' : err.message}`,
+                    text: `**Request Failed (${cleanModel}):** ${lastErrorDetail}`,
                     modelUsed: cleanModel
                 };
             }
