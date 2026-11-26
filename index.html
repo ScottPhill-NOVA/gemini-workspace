@@ -890,7 +890,7 @@
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#f0f4f9] hover:bg-[#e1e5ea] text-[#444746] text-[11px] font-medium">
                                 <span>Copy</span>
                             </button>
-                            ${msg.modelUsed ? `<span class="text-[10px] text-[#5f6368] px-1.5">${escapeHtml(msg.modelUsed)}</span>` : ''}
+                            ${msg.modelUsed ? `<span class="text-[10px] text-[#5f6368] px-1.5">${escapeHtml(msg.modelUsed)}${msg.tokenInfo ? ` • ${escapeHtml(msg.tokenInfo)}` : ''}</span>` : ''}
                         </div>
                     </div>
                 </div>
@@ -1052,25 +1052,42 @@
         input.style.height = 'auto';
 
         const typingId = generateId('typing');
+        const activeModelLabel = (appSettings.model || 'gemini-4-hydrogen').replace(/^models\//, '');
         sess.messages.push({
             id: typingId,
             role: 'assistant',
             isTyping: true,
-            statusText: 'Thinking...'
+            statusText: `Thinking (${activeModelLabel})... 0s`
         });
 
         saveState();
         renderAll();
         scrollMainToBottom();
 
-        const historyForApi = sess.messages.filter(m => !m.isTyping);
-        const result = await queryGeminiOrFallback(historyForApi, null, (attempt, max) => {
+        const startTime = Date.now();
+        let retryPrefix = '';
+        const elapsedTimer = setInterval(() => {
             const typingMsg = sess.messages.find(m => m.id === typingId);
-            if (typingMsg) {
-                typingMsg.statusText = `Server busy, retrying (${attempt}/${max})...`;
-                renderMainThread();
+            if (!typingMsg) {
+                clearInterval(elapsedTimer);
+                return;
             }
-        });
+            const secs = Math.floor((Date.now() - startTime) / 1000);
+            typingMsg.statusText = retryPrefix
+                ? `${retryPrefix} (${secs}s)`
+                : `Thinking (${activeModelLabel})... ${secs}s`;
+            renderMainThread();
+        }, 1000);
+
+        const historyForApi = sess.messages.filter(m => !m.isTyping);
+        let result;
+        try {
+            result = await queryGeminiOrFallback(historyForApi, null, (attempt, max) => {
+                retryPrefix = `Server busy, retrying (${attempt}/${max})...`;
+            });
+        } finally {
+            clearInterval(elapsedTimer);
+        }
 
         sess.messages = sess.messages.filter(m => m.id !== typingId);
         sess.messages.push({
@@ -1078,6 +1095,7 @@
             role: 'assistant',
             content: result.text,
             modelUsed: result.modelUsed,
+            tokenInfo: result.tokenInfo || '',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
         sess.updatedAt = Date.now();
@@ -1522,7 +1540,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
-                }, 45000);
+                }, 180000);
 
                 const data = await res.json().catch(() => ({}));
 
@@ -1531,7 +1549,7 @@
                     const isTransient = res.status === 429 || res.status === 500 || res.status === 503 || res.status === 504;
                     if (isTransient && attempt < maxRetries) {
                         if (onRetryStatus) onRetryStatus(attempt, maxRetries);
-                        await new Promise(r => setTimeout(r, 1200 * attempt));
+                        await new Promise(r => setTimeout(r, 1500 * attempt));
                         continue;
                     }
                     return {
@@ -1541,18 +1559,23 @@
                 }
 
                 const replyText = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || 'No response text returned.';
+                const usage = data?.usageMetadata;
+                const tokenInfo = usage
+                    ? `${(usage.promptTokenCount || 0).toLocaleString()} in / ${(usage.candidatesTokenCount || 0).toLocaleString()} out tokens`
+                    : '';
                 return {
                     text: replyText,
-                    modelUsed: cleanModel
+                    modelUsed: cleanModel,
+                    tokenInfo
                 };
             } catch (err) {
                 if (attempt < maxRetries) {
                     if (onRetryStatus) onRetryStatus(attempt, maxRetries);
-                    await new Promise(r => setTimeout(r, 1200 * attempt));
+                    await new Promise(r => setTimeout(r, 1500 * attempt));
                     continue;
                 }
                 return {
-                    text: `**Network / Timeout Error:** ${err.name === 'AbortError' ? 'Request timed out after 45s.' : err.message}`,
+                    text: `**Network / Timeout Error:** ${err.name === 'AbortError' ? 'Request timed out after 180s.' : err.message}`,
                     modelUsed: cleanModel
                 };
             }
