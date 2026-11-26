@@ -139,7 +139,7 @@
 
         <!-- New Chat Pill -->
         <div class="px-3 pt-1 pb-2 shrink-0">
-            <button onclick="createNewThread()" class="inline-flex items-center gap-3 px-4 py-2.5 rounded-full bg-[#dde3ea] hover:bg-[#d2d9e2] text-[#1f1f1f] text-sm font-medium transition-colors shadow-2xs w-full">
+            <button onclick="createNewThread()" class="inline-flex items-center gap-3 px-4 py-2.5 rounded-full bg-[#dde3ea] hover:bg-[#d2d9e2] text-[#1f1f1f] text-sm font-medium transition-colors shadow-sm w-full">
                 <svg class="w-4 h-4 text-[#444746] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 <span>New chat</span>
             </button>
@@ -189,7 +189,7 @@
     <!-- Main Pure-White Workspace -->
     <div id="main-workspace" class="flex-1 flex flex-col min-w-0 bg-white relative overflow-hidden">
         <!-- Minimal Top Header Bar -->
-        <header class="h-14 px-3 sm:px-6 flex items-center justify-between shrink-0 bg-white/90 backdrop-blur-xs z-20 gap-2 border-b border-slate-100">
+        <header class="h-14 px-3 sm:px-6 flex items-center justify-between shrink-0 bg-white/90 backdrop-blur-sm z-20 gap-2 border-b border-slate-100">
             <div class="flex items-center gap-2 min-w-0">
                 <button id="header-menu-btn" onclick="toggleLeftSidebar()" title="Open menu" class="w-10 h-10 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746] transition-colors shrink-0">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -211,9 +211,9 @@
                 </button>
                 <button id="toggle-notes-visibility-btn" onclick="toggleAllNotesVisibility()" title="Show or hide Post-It notes" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium text-[#444746] hover:bg-[#f0f4f9] transition-colors">
                     <span>Notes</span>
-                    <span id="notes-count-badge" class="px-1.5 py-0.2 rounded-full bg-[#f0f4f9] text-[#1f1f1f] font-semibold">0</span>
+                    <span id="notes-count-badge" class="px-1.5 py-0.5 rounded-full bg-[#f0f4f9] text-[#1f1f1f] font-semibold">0</span>
                 </button>
-                <button onclick="spawnPostItNote()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#fef7cd] hover:bg-[#fcf0ad] border border-[#f3e38a] text-[#3f3708] text-xs font-medium shadow-2xs transition-all">
+                <button onclick="spawnPostItNote()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#fef7cd] hover:bg-[#fcf0ad] border border-[#f3e38a] text-[#3f3708] text-xs font-medium shadow-sm transition-all">
                     <span>📌 + Note</span>
                 </button>
                 <button onclick="openSettingsModal('api')" title="Settings & API Key" class="w-9 h-9 rounded-full bg-[#f0f4f9] hover:bg-[#e1e5ea] flex items-center justify-center text-[#1f1f1f] transition-colors shrink-0">
@@ -269,7 +269,7 @@
                             class="ipad-safe-input flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 resize-none py-2 px-1 text-[#1f1f1f] placeholder-[#444746] max-h-40 leading-relaxed"></textarea>
 
                         <button id="main-send-btn" type="button" onclick="sendMainMessage()" title="Send message"
-                            class="w-10 h-10 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] disabled:bg-slate-300 text-white flex items-center justify-center shrink-0 transition-colors mb-0.5">
+                            class="w-10 h-10 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] disabled:bg-slate-300 disabled:cursor-not-allowed text-white flex items-center justify-center shrink-0 transition-colors mb-0.5">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
                         </button>
                     </div>
@@ -283,7 +283,7 @@
 </div>
 
 <!-- Settings & Sync Modal -->
-<div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-xs flex items-center justify-center p-4">
+<div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
             <div>
@@ -293,17 +293,17 @@
             <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-full hover:bg-[#f0f4f9] flex items-center justify-center text-[#444746]">✕</button>
         </div>
 
-        <div class="p-6 overflow-y-auto clean-scroll space-y-6 text-sm">
+        <div id="settings-modal-body" class="p-6 overflow-y-auto clean-scroll space-y-6 text-sm">
             <!-- Gemini API Configuration -->
-            <div class="space-y-3">
+            <div id="settings-api-section" class="space-y-3">
                 <div class="flex items-center justify-between">
                     <label for="settings-api-key" class="text-xs font-semibold uppercase tracking-wider text-[#444746]">Google AI Studio API Key</label>
-                    <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="text-xs font-medium text-[#1a73e8] hover:underline">Get free key ↗</a>
+                    <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="text-xs font-medium text-[#1a73e8] hover:underline">Get key ↗</a>
                 </div>
                 <div class="flex gap-2">
                     <input id="settings-api-key" type="password" autocomplete="off" spellcheck="false" placeholder="AIzaSy..."
                         class="ipad-safe-input flex-1 px-3.5 py-2.5 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] focus:outline-none" />
-                    <button type="button" onclick="toggleApiKeyVisibility()" class="px-3 py-2 rounded-xl bg-[#f0f4f9] hover:bg-[#e1e5ea] text-xs font-medium text-[#444746]">Show</button>
+                    <button id="toggle-key-vis-btn" type="button" onclick="toggleApiKeyVisibility()" class="px-3 py-2 rounded-xl bg-[#f0f4f9] hover:bg-[#e1e5ea] text-xs font-medium text-[#444746]">Show</button>
                     <button id="test-api-btn" type="button" onclick="testGeminiConnection()" class="px-3.5 py-2 rounded-xl bg-[#e8f0fe] hover:bg-[#d2e3fc] text-xs font-semibold text-[#1a73e8]">Test</button>
                 </div>
                 <p id="api-test-status" class="text-xs text-[#5f6368]">Stored locally in this browser only. Never uploaded to GitHub.</p>
@@ -313,11 +313,8 @@
                         <label for="settings-model-select" class="block text-xs font-medium text-[#1f1f1f]">Main Thread Model</label>
                         <select id="settings-model-select"
                             class="ipad-safe-input w-full px-3 py-2.5 rounded-xl bg-[#f8fafd] border border-slate-200 focus:border-[#1a73e8] focus:bg-white text-[#1f1f1f] focus:outline-none">
-                            <option value="gemini-4-hydrogen">Gemini 4 Hydrogen — Heavy Lifting</option>
-                            <option value="gemini-4-neon">Gemini 4 Neon — Frontier</option>
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash — Fast Coding</option>
                             <option value="gemini-2.5-pro">Gemini 2.5 Pro — Deep Architecture</option>
-                            <option value="gemini-2.5-flash">Gemini 2.5 Flash — Fast &amp; Capable</option>
-                            <option value="gemini-3.8-flash">Gemini 3.8 Flash — Balanced</option>
                             <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
                             <option value="demo">Demo Mode — Offline Simulated</option>
                         </select>
@@ -337,7 +334,7 @@
             <hr class="border-slate-100" />
 
             <!-- Cross-Device Backup & Restore -->
-            <div class="space-y-3">
+            <div id="settings-sync-section" class="space-y-3">
                 <div class="text-xs font-semibold uppercase tracking-wider text-[#444746]">iPad ↔ Windows Desktop Sync (.json)</div>
                 <p class="text-xs text-[#5f6368] leading-relaxed">
                     Save your complete workspace (all threads and floating Post-It notes) to iCloud Drive or Google Drive, then load that file on your other device.
@@ -364,13 +361,13 @@
 
         <div class="px-6 py-3.5 bg-[#f8fafd] border-t border-slate-100 flex items-center justify-end gap-2 shrink-0">
             <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 rounded-full text-xs font-medium text-[#444746] hover:bg-[#e1e5ea]">Cancel</button>
-            <button type="button" onclick="saveSettingsFromModal()" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-2xs">Save Settings</button>
+            <button type="button" onclick="saveSettingsFromModal()" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1a73e8] hover:bg-[#1557b0] text-white shadow-sm">Save Settings</button>
         </div>
     </div>
 </div>
 
 <!-- Import / Paste Existing Gemini Chat Modal -->
-<div id="import-chat-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-xs flex items-center justify-center p-4">
+<div id="import-chat-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[88vh]">
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
             <div>
@@ -399,7 +396,7 @@
 </div>
 
 <!-- Export Markdown Modal -->
-<div id="export-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-xs flex items-center justify-center p-4">
+<div id="export-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[88vh]">
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
             <h2 class="font-display text-base font-semibold text-[#1f1f1f]">Export Thread as Markdown</h2>
@@ -416,6 +413,20 @@
         <div class="px-6 py-3.5 bg-[#f8fafd] border-t border-slate-100 flex items-center justify-end gap-2 shrink-0">
             <button type="button" onclick="closeExportModal()" class="px-4 py-2 rounded-full text-xs font-medium text-[#444746] hover:bg-[#e1e5ea]">Close</button>
             <button id="copy-export-btn" type="button" onclick="copyExportMarkdown()" class="px-5 py-2 rounded-full text-xs font-semibold bg-[#1a73e8] hover:bg-[#1557b0] text-white">Copy Markdown</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Delete Thread Modal -->
+<div id="confirm-delete-modal" class="hidden fixed inset-0 z-50 bg-black/35 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden p-6 space-y-4">
+        <div class="space-y-1">
+            <h3 class="font-display text-base font-semibold text-[#1f1f1f]">Delete this thread?</h3>
+            <p id="confirm-delete-desc" class="text-xs text-[#5f6368] leading-relaxed">This will permanently remove the thread and its floating Post-It notes.</p>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-1">
+            <button type="button" onclick="closeConfirmDeleteModal()" class="px-4 py-2 rounded-full text-xs font-medium text-[#444746] hover:bg-[#e1e5ea]">Cancel</button>
+            <button type="button" onclick="confirmDeleteThread()" class="px-4 py-2 rounded-full text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white">Delete</button>
         </div>
     </div>
 </div>
@@ -448,13 +459,24 @@
     let pendingSelectionMessageId = null;
     let activeDrag = null;
     let pendingAttachments = [];
+    let activeAbortController = null;
+    let isMainSending = false;
+    let pendingDeleteThreadId = null;
+    let tetherRafPending = false;
+    const codeBlockStore = new Map();
+
     let appSettings = {
         apiKey: '',
-        model: 'gemini-4-hydrogen',
+        model: 'gemini-2.5-flash',
         noteModel: 'gemini-2.5-flash'
     };
 
     const NOTE_COLORS = ['note-yellow', 'note-mint', 'note-sky', 'note-rose'];
+
+    function sanitizeId(raw, fallbackPrefix = 'id') {
+        const cleaned = String(raw ?? '').replace(/[^a-zA-Z0-9_-]/g, '');
+        return cleaned || generateId(fallbackPrefix);
+    }
 
     function generateId(prefix = 'id') {
         return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -475,7 +497,18 @@
         toast.textContent = msg;
         toast.classList.remove('hidden');
         clearTimeout(toast._timer);
-        toast._timer = setTimeout(() => toast.classList.add('hidden'), 2400);
+        toast._timer = setTimeout(() => toast.classList.add('hidden'), 2600);
+    }
+
+    function scrollMainToBottom(smooth = true) {
+        const scroller = document.getElementById('main-thread-scroll');
+        if (!scroller) return;
+        requestAnimationFrame(() => {
+            scroller.scrollTo({
+                top: scroller.scrollHeight,
+                behavior: smooth ? 'smooth' : 'auto'
+            });
+        });
     }
 
     function createDefaultSessions() {
@@ -567,11 +600,21 @@
                 const parsedSessions = JSON.parse(rawSessions);
                 if (Array.isArray(parsedSessions) && parsedSessions.length > 0) {
                     sessions = parsedSessions.map(s => ({
-                        id: s.id || generateId('sess'),
+                        id: sanitizeId(s.id, 'sess'),
                         title: s.title || 'Untitled Thread',
                         updatedAt: s.updatedAt || Date.now(),
-                        messages: Array.isArray(s.messages) ? s.messages : [],
-                        postIts: Array.isArray(s.postIts) ? s.postIts : []
+                        // Strip any stale in-flight typing placeholders left by a reload
+                        messages: Array.isArray(s.messages)
+                            ? s.messages.filter(m => !m.isTyping).map(m => ({ ...m, id: sanitizeId(m.id, 'msg') }))
+                            : [],
+                        postIts: Array.isArray(s.postIts)
+                            ? s.postIts.map(n => ({
+                                ...n,
+                                id: sanitizeId(n.id, 'note'),
+                                anchorMessageId: n.anchorMessageId ? sanitizeId(n.anchorMessageId, 'msg') : null,
+                                messages: Array.isArray(n.messages) ? n.messages.filter(nm => !nm.isTyping) : []
+                            }))
+                            : []
                     }));
                 }
             }
@@ -579,11 +622,21 @@
             sessions = [];
         }
 
-        // Always guarantee starter threads exist if sessions is empty
         if (!Array.isArray(sessions) || sessions.length === 0) {
             sessions = createDefaultSessions();
             saveState();
         }
+
+        // Sync topZIndex with highest existing Post-It zIndex
+        let maxZ = 35;
+        sessions.forEach(s => {
+            (s.postIts || []).forEach(n => {
+                if (typeof n.zIndex === 'number' && n.zIndex > maxZ) {
+                    maxZ = n.zIndex;
+                }
+            });
+        });
+        topZIndex = maxZ;
 
         try {
             const savedActive = localStorage.getItem(STORAGE_KEYS.ACTIVE_ID);
@@ -607,6 +660,9 @@
             localStorage.setItem(STORAGE_KEYS.SIDEBAR_OPEN, String(leftSidebarOpen));
         } catch (e) {
             console.warn('localStorage save failed:', e);
+            if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
+                showToast('Storage nearly full — export a .json backup or clear old image threads');
+            }
         }
     }
 
@@ -655,7 +711,7 @@
         leftSidebarOpen = typeof forceState === 'boolean' ? forceState : !leftSidebarOpen;
         saveState();
         applyLeftSidebarUI();
-        setTimeout(drawTetherLines, 260);
+        setTimeout(scheduleTetherDraw, 260);
     }
 
     function renderRecentThreads() {
@@ -684,18 +740,19 @@
         }
 
         listEl.innerHTML = filtered.map(sess => {
-            const isActive = sess.id === activeSessionId;
+            const safeSessId = sanitizeId(sess.id, 'sess');
+            const isActive = safeSessId === activeSessionId;
             const noteCount = (sess.postIts || []).length;
             return `
-                <div onclick="switchThread('${sess.id}')"
+                <div onclick="switchThread('${safeSessId}')"
                     class="group flex items-center justify-between gap-2 px-3 py-2 rounded-full cursor-pointer text-xs transition-colors ${isActive ? 'bg-[#d3e3fd] text-[#041e49] font-medium' : 'text-[#1f1f1f] hover:bg-[#e1e5ea]'}">
                     <div class="flex items-center gap-2.5 min-w-0 flex-1">
                         <svg class="w-3.5 h-3.5 shrink-0 opacity-75" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         <span class="truncate">${escapeHtml(sess.title || 'New Chat')}</span>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
-                        ${noteCount > 0 ? `<span class="text-[10px] px-1.5 py-0.2 rounded-full bg-[#fef7cd] text-[#3f3708] font-semibold">📌${noteCount}</span>` : ''}
-                        <button onclick="event.stopPropagation(); deleteThread('${sess.id}')" title="Delete thread"
+                        ${noteCount > 0 ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-[#fef7cd] text-[#3f3708] font-semibold">📌${noteCount}</span>` : ''}
+                        <button onclick="event.stopPropagation(); requestDeleteThread('${safeSessId}')" title="Delete thread"
                             class="opacity-60 sm:opacity-0 group-hover:opacity-100 w-6 h-6 rounded-full hover:bg-black/10 flex items-center justify-center text-[#444746] transition-opacity">
                             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                         </button>
@@ -706,6 +763,10 @@
     }
 
     function switchThread(id) {
+        if (isMainSending) {
+            showToast('Wait for current reply or tap Stop first');
+            return;
+        }
         activeSessionId = id;
         if (window.innerWidth < 1024) {
             leftSidebarOpen = false;
@@ -716,6 +777,10 @@
     }
 
     function createNewThread() {
+        if (isMainSending) {
+            showToast('Wait for current reply or tap Stop first');
+            return;
+        }
         const newSess = {
             id: generateId('sess'),
             title: 'New Chat',
@@ -735,7 +800,27 @@
         if (input) input.focus();
     }
 
-    function deleteThread(id) {
+    function requestDeleteThread(id) {
+        const target = sessions.find(s => s.id === id);
+        if (!target) return;
+        pendingDeleteThreadId = id;
+        const descEl = document.getElementById('confirm-delete-desc');
+        if (descEl) {
+            descEl.textContent = `Delete "${target.title || 'New Chat'}" and all its floating Post-It notes?`;
+        }
+        document.getElementById('confirm-delete-modal')?.classList.remove('hidden');
+    }
+
+    function closeConfirmDeleteModal() {
+        pendingDeleteThreadId = null;
+        document.getElementById('confirm-delete-modal')?.classList.add('hidden');
+    }
+
+    function confirmDeleteThread() {
+        if (!pendingDeleteThreadId) return;
+        const id = pendingDeleteThreadId;
+        closeConfirmDeleteModal();
+
         sessions = sessions.filter(s => s.id !== id);
         if (sessions.length === 0) {
             sessions = createDefaultSessions();
@@ -745,13 +830,14 @@
         }
         saveState();
         renderAll();
-        showToast('Thread removed');
+        showToast('Thread deleted');
     }
 
     function formatMarkdownLite(rawText) {
         const text = String(rawText || '');
         const codeBlocks = [];
-        let processed = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
+        // Handle both Unix (\n) and Windows (\r\n) line endings
+        let processed = text.replace(/```([a-zA-Z0-9_-]*)[ \t]*\r?\n([\s\S]*?)```/g, (_, lang, code) => {
             const idx = codeBlocks.length;
             codeBlocks.push({ lang: lang || 'code', code });
             return `@@CODEBLOCK_${idx}@@`;
@@ -761,17 +847,18 @@
         processed = processed.replace(/`([^`\n]+)`/g, '<code class="px-1.5 py-0.5 rounded-md bg-[#f0f4f9] text-[#1f1f1f] font-mono-code text-[13px]">$1</code>');
         processed = processed.replace(/\*\*([^*\n]+)\*\*/g, '<strong class="font-semibold text-[#1f1f1f]">$1</strong>');
         processed = processed.replace(/\*([^*\n]+)\*/g, '<em class="italic">$1</em>');
-        processed = processed.replace(/\n/g, '<br>');
+        processed = processed.replace(/\r?\n/g, '<br>');
 
         processed = processed.replace(/@@CODEBLOCK_(\d+)@@/g, (_, idxStr) => {
             const block = codeBlocks[Number(idxStr)];
             if (!block) return '';
-            const encoded = encodeURIComponent(block.code);
+            const blockId = generateId('cb');
+            codeBlockStore.set(blockId, block.code);
             return `
                 <div class="my-3 rounded-2xl overflow-hidden border border-slate-200 bg-[#f8fafd]">
                     <div class="px-3.5 py-1.5 bg-[#f0f4f9] border-b border-slate-200/80 flex items-center justify-between text-[11px] text-[#444746]">
                         <span class="font-mono-code uppercase">${escapeHtml(block.lang)}</span>
-                        <button type="button" onclick="copyEncodedCode('${encoded}')" class="hover:text-[#1a73e8] font-medium">Copy code</button>
+                        <button type="button" onclick="copyStoredCodeBlock('${blockId}')" class="hover:text-[#1a73e8] font-medium">Copy code</button>
                     </div>
                     <pre class="p-3.5 overflow-x-auto text-xs font-mono-code text-[#1f1f1f] leading-relaxed"><code>${escapeHtml(block.code)}</code></pre>
                 </div>
@@ -805,8 +892,11 @@
         document.body.removeChild(ta);
     }
 
-    function copyEncodedCode(encoded) {
-        copyTextToClipboard(decodeURIComponent(encoded));
+    function copyStoredCodeBlock(blockId) {
+        const code = codeBlockStore.get(blockId);
+        if (typeof code === 'string') {
+            copyTextToClipboard(code);
+        }
     }
 
     function renderMainThread() {
@@ -843,17 +933,18 @@
         }
 
         container.innerHTML = sess.messages.map(msg => {
+            const safeMsgId = sanitizeId(msg.id, 'msg');
             if (msg.role === 'user') {
                 const attachmentsHtml = (msg.attachments && msg.attachments.length > 0)
                     ? `<div class="flex flex-wrap justify-end gap-2 mb-1.5">${msg.attachments.map(att => {
                         if (att.kind === 'image') {
-                            return `<img src="data:${escapeHtml(att.mimeType)};base64,${att.data}" alt="${escapeHtml(att.name)}" class="max-h-44 max-w-[240px] rounded-2xl border border-slate-200 object-cover shadow-2xs" />`;
+                            return `<img src="data:${escapeHtml(att.mimeType)};base64,${att.data}" alt="${escapeHtml(att.name)}" class="max-h-44 max-w-[240px] rounded-2xl border border-slate-200 object-cover shadow-sm" />`;
                         }
-                        return `<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-[#1f1f1f] shadow-2xs"><span>📄</span><span class="truncate max-w-[180px]">${escapeHtml(att.name)}</span></div>`;
+                        return `<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-medium text-[#1f1f1f] shadow-sm"><span>📄</span><span class="truncate max-w-[180px]">${escapeHtml(att.name)}</span></div>`;
                     }).join('')}</div>`
                     : '';
                 return `
-                    <div id="msg-${msg.id}" class="flex flex-col items-end">
+                    <div id="msg-${safeMsgId}" class="flex flex-col items-end">
                         ${attachmentsHtml}
                         ${msg.content ? `<div class="max-w-[85%] sm:max-w-[78%] rounded-3xl rounded-br-md bg-[#f0f4f9] px-5 py-3.5 text-[15px] text-[#1f1f1f] leading-relaxed whitespace-pre-wrap">${escapeHtml(msg.content)}</div>` : ''}
                     </div>
@@ -862,13 +953,13 @@
 
             if (msg.isTyping) {
                 return `
-                    <div id="msg-${msg.id}" class="flex items-start gap-3.5">
+                    <div id="msg-${safeMsgId}" class="flex items-start gap-3.5">
                         <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#4285f4] via-[#9b72cb] to-[#d96570] text-white flex items-center justify-center text-sm shrink-0 mt-0.5">✦</div>
                         <div class="pt-2 flex flex-wrap items-center gap-2 text-xs text-[#5f6368]">
                             <span class="w-2 h-2 rounded-full bg-[#4285f4] typing-dot"></span>
                             <span class="w-2 h-2 rounded-full bg-[#9b72cb] typing-dot"></span>
                             <span class="w-2 h-2 rounded-full bg-[#d96570] typing-dot"></span>
-                            <span>${escapeHtml(msg.statusText || 'Thinking...')}</span>
+                            <span id="typing-status-${safeMsgId}">${escapeHtml(msg.statusText || 'Thinking...')}</span>
                             <button type="button" onclick="cancelActiveRequest()" class="ml-1 px-2.5 py-0.5 rounded-full bg-[#f0f4f9] hover:bg-rose-100 text-[#444746] hover:text-rose-700 text-[11px] font-medium transition-colors">Stop</button>
                         </div>
                     </div>
@@ -876,18 +967,18 @@
             }
 
             return `
-                <div id="msg-${msg.id}" data-message-id="${msg.id}" class="group flex items-start gap-3.5">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#4285f4] via-[#9b72cb] to-[#d96570] text-white flex items-center justify-center text-sm shrink-0 mt-0.5 shadow-2xs">✦</div>
+                <div id="msg-${safeMsgId}" data-message-id="${safeMsgId}" class="group flex items-start gap-3.5">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#4285f4] via-[#9b72cb] to-[#d96570] text-white flex items-center justify-center text-sm shrink-0 mt-0.5 shadow-sm">✦</div>
                     <div class="flex-1 min-w-0 space-y-2">
-                        <div class="assistant-message-body text-[15px] text-[#1f1f1f] leading-relaxed select-text" data-message-id="${msg.id}">
+                        <div class="assistant-message-body text-[15px] text-[#1f1f1f] leading-relaxed select-text" data-message-id="${safeMsgId}">
                             ${formatMarkdownLite(msg.content)}
                         </div>
                         <div class="flex flex-wrap items-center gap-2 pt-1 opacity-85 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button type="button" onclick="spawnPostItForMessage('${msg.id}')"
+                            <button type="button" onclick="spawnPostItForMessage('${safeMsgId}')"
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#fef7cd] hover:bg-[#fcf0ad] border border-[#f3e38a] text-[#3f3708] text-[11px] font-medium">
                                 <span>📌 Clarify on Post-It</span>
                             </button>
-                            <button type="button" onclick="copyMessageContent('${msg.id}')"
+                            <button type="button" onclick="copyMessageContent('${safeMsgId}')"
                                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#f0f4f9] hover:bg-[#e1e5ea] text-[#444746] text-[11px] font-medium">
                                 <span>Copy</span>
                             </button>
@@ -940,7 +1031,7 @@
         bar.innerHTML = pendingAttachments.map((att, idx) => {
             if (att.kind === 'image') {
                 return `
-                    <div class="relative group inline-flex items-center gap-2 pr-2 pl-1 py-1 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div class="relative group inline-flex items-center gap-2 pr-2 pl-1 py-1 rounded-xl bg-white border border-slate-200 shadow-sm">
                         <img src="data:${escapeHtml(att.mimeType)};base64,${att.data}" alt="${escapeHtml(att.name)}" class="w-9 h-9 rounded-lg object-cover" />
                         <span class="text-xs font-medium text-[#1f1f1f] max-w-[120px] truncate">${escapeHtml(att.name)}</span>
                         <button type="button" onclick="removePendingAttachment(${idx})" class="w-5 h-5 rounded-full bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-xs flex items-center justify-center">✕</button>
@@ -948,7 +1039,7 @@
                 `;
             }
             return `
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-2xs text-xs">
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 shadow-sm text-xs">
                     <span>📄</span>
                     <span class="font-medium text-[#1f1f1f] max-w-[150px] truncate">${escapeHtml(att.name)}</span>
                     <button type="button" onclick="removePendingAttachment(${idx})" class="w-5 h-5 rounded-full bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-[11px] flex items-center justify-center ml-0.5">✕</button>
@@ -962,22 +1053,54 @@
         renderComposerAttachments();
     }
 
+    // Downscale pasted/uploaded screenshots via canvas so localStorage stays lightweight
+    function compressImageDataUrl(dataUrl, maxDim = 1280, quality = 0.82) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                let { width, height } = img;
+                if (width > maxDim || height > maxDim) {
+                    const scale = maxDim / Math.max(width, height);
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    const fallbackBase64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : '';
+                    return resolve({ mimeType: 'image/png', data: fallbackBase64 });
+                }
+                ctx.drawImage(img, 0, 0, width, height);
+                const compressedUrl = canvas.toDataURL('image/jpeg', quality);
+                const base64 = compressedUrl.includes(',') ? compressedUrl.split(',')[1] : '';
+                resolve({ mimeType: 'image/jpeg', data: base64 });
+            };
+            img.onerror = () => {
+                const fallbackBase64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : '';
+                resolve({ mimeType: 'image/png', data: fallbackBase64 });
+            };
+            img.src = dataUrl;
+        });
+    }
+
     function readFileAsAttachment(file) {
         return new Promise((resolve) => {
             if (!file) return resolve(null);
             if (file.type && file.type.startsWith('image/')) {
                 const reader = new FileReader();
-                reader.onload = () => {
+                reader.onload = async () => {
                     const dataUrl = String(reader.result || '');
-    let pendingSelectionMessageId = null;
-    let activeDrag = null;
-    let pendingAttachments = [];
-    let activeAbortController = null;
-    let appSettings = {
-        apiKey: '',
-        model: 'gemini-4-hydrogen',
-        noteModel: 'gemini-2.5-flash'
-    };
+                    const compressed = await compressImageDataUrl(dataUrl);
+                    if (!compressed.data) return resolve(null);
+                    resolve({
+                        kind: 'image',
+                        name: file.name || 'screenshot.jpg',
+                        mimeType: compressed.mimeType,
+                        data: compressed.data
+                    });
+                };
                 reader.onerror = () => resolve(null);
                 reader.readAsDataURL(file);
             } else {
@@ -1024,11 +1147,21 @@
         showToast('Screenshot attached');
     }
 
+    function setMainSendDisabled(disabled) {
+        isMainSending = disabled;
+        const sendBtn = document.getElementById('main-send-btn');
+        if (sendBtn) sendBtn.disabled = disabled;
+    }
+
     async function sendMainMessage() {
+        if (isMainSending) return;
+
         const input = document.getElementById('main-prompt-input');
         if (!input) return;
         const text = input.value.trim();
         if (!text && pendingAttachments.length === 0) return;
+
+        setMainSendDisabled(true);
 
         const sess = getActiveSession();
         const attachmentsToSend = [...pendingAttachments];
@@ -1054,7 +1187,7 @@
         input.style.height = 'auto';
 
         const typingId = generateId('typing');
-        const activeModelLabel = (appSettings.model || 'gemini-4-hydrogen').replace(/^models\//, '');
+        const activeModelLabel = (appSettings.model || 'gemini-2.5-flash').replace(/^models\//, '');
         sess.messages.push({
             id: typingId,
             role: 'assistant',
@@ -1068,6 +1201,7 @@
 
         const startTime = Date.now();
         let retryPrefix = '';
+        // Update only the status span's textContent so DOM & selection stay intact
         const elapsedTimer = setInterval(() => {
             const typingMsg = sess.messages.find(m => m.id === typingId);
             if (!typingMsg) {
@@ -1075,10 +1209,14 @@
                 return;
             }
             const secs = Math.floor((Date.now() - startTime) / 1000);
-            typingMsg.statusText = retryPrefix
+            const nextText = retryPrefix
                 ? `${retryPrefix} (${secs}s)`
                 : `Thinking (${activeModelLabel})... ${secs}s`;
-            renderMainThread();
+            typingMsg.statusText = nextText;
+            const statusSpan = document.getElementById(`typing-status-${typingId}`);
+            if (statusSpan) {
+                statusSpan.textContent = nextText;
+            }
         }, 1000);
 
         const historyForApi = sess.messages.filter(m => !m.isTyping);
@@ -1090,6 +1228,7 @@
         } finally {
             clearInterval(elapsedTimer);
             activeAbortController = null;
+            setMainSendDisabled(false);
         }
 
         sess.messages = sess.messages.filter(m => m.id !== typingId);
@@ -1118,6 +1257,39 @@
     // =========================================================================
     // POST-IT STICKY NOTES ENGINE
     // =========================================================================
+    function renderSinglePostItMessages(noteId) {
+        const sess = getActiveSession();
+        const note = (sess.postIts || []).find(n => n.id === noteId);
+        const box = document.getElementById(`postit-msgs-${noteId}`);
+        if (!note || !box) return;
+
+        box.innerHTML = (note.messages || []).length === 0 ? `
+            <div class="text-[11px] text-[#444746] leading-relaxed">
+                Ask a quick question here—your Main Thread context is included automatically without cluttering it.
+            </div>
+        ` : (note.messages || []).map(m => {
+            if (m.role === 'user') {
+                return `<div class="bg-white/75 rounded-xl px-2.5 py-1.5 font-medium text-[#1f1f1f] whitespace-pre-wrap">${escapeHtml(m.content)}</div>`;
+            }
+            if (m.isTyping) {
+                return `<div class="text-[11px] text-[#444746] italic">Thinking...</div>`;
+            }
+            return `<div class="leading-relaxed text-[#1f1f1f]">${formatMarkdownLite(m.content)}</div>`;
+        }).join('');
+
+        // Toggle promote button visibility without rebuilding the input field
+        const promoteWrap = document.getElementById(`postit-promote-${noteId}`);
+        if (promoteWrap) {
+            const hasReply = (note.messages || []).some(m => m.role === 'assistant' && !m.isTyping);
+            promoteWrap.classList.toggle('hidden', !hasReply);
+        }
+        const titleEl = document.getElementById(`postit-title-${noteId}`);
+        if (titleEl) {
+            titleEl.textContent = note.title || 'Side Clarifier';
+        }
+        box.scrollTop = box.scrollHeight;
+    }
+
     function renderPostItNotes() {
         const layer = document.getElementById('postits-layer');
         const countBadge = document.getElementById('notes-count-badge');
@@ -1129,46 +1301,49 @@
 
         if (!notesVisible || notes.length === 0) {
             layer.innerHTML = '';
-            drawTetherLines();
+            scheduleTetherDraw();
             return;
         }
 
         layer.innerHTML = notes.map((note, idx) => {
+            const safeNoteId = sanitizeId(note.id, 'note');
             const safeX = Math.min(Math.max(12, note.x ?? (window.innerWidth - 320)), Math.max(12, window.innerWidth - 296));
             const safeY = Math.min(Math.max(64, note.y ?? (80 + idx * 36)), Math.max(64, window.innerHeight - 140));
             const colorClass = note.color || 'note-yellow';
 
             if (note.minimized) {
                 return `
-                    <div id="postit-${note.id}" style="left:${safeX}px; top:${safeY}px; z-index:${note.zIndex || 35};"
-                        onmouseenter="highlightTether('${note.id}', true)" onmouseleave="highlightTether('${note.id}', false)"
+                    <div id="postit-${safeNoteId}" style="left:${safeX}px; top:${safeY}px; z-index:${note.zIndex || 35};"
+                        onmouseenter="highlightTether('${safeNoteId}', true)" onmouseleave="highlightTether('${safeNoteId}', false)"
                         class="postit-card pointer-events-auto fixed w-60 rounded-2xl border ${colorClass} overflow-hidden">
-                        <div onpointerdown="startDragPostIt(event, '${note.id}')" class="postit-drag-handle note-header px-3 py-2 flex items-center justify-between gap-2">
+                        <div onpointerdown="startDragPostIt(event, '${safeNoteId}')" class="postit-drag-handle note-header px-3 py-2 flex items-center justify-between gap-2">
                             <span class="text-xs font-semibold text-[#2b2504] truncate">📌 ${escapeHtml(note.title || 'Side Note')}</span>
                             <div class="flex items-center gap-1 shrink-0">
-                                <button type="button" onclick="toggleMinimizePostIt('${note.id}')" title="Expand note" class="w-6 h-6 rounded-full hover:bg-black/10 text-xs flex items-center justify-center">+</button>
-                                <button type="button" onclick="deletePostIt('${note.id}')" title="Close note" class="w-6 h-6 rounded-full hover:bg-black/10 text-xs flex items-center justify-center">✕</button>
+                                <button type="button" onclick="toggleMinimizePostIt('${safeNoteId}')" title="Expand note" class="w-6 h-6 rounded-full hover:bg-black/10 text-xs flex items-center justify-center">+</button>
+                                <button type="button" onclick="deletePostIt('${safeNoteId}')" title="Close note" class="w-6 h-6 rounded-full hover:bg-black/10 text-xs flex items-center justify-center">✕</button>
                             </div>
                         </div>
                     </div>
                 `;
             }
 
+            const hasAssistantReply = (note.messages || []).some(m => m.role === 'assistant' && !m.isTyping);
+
             return `
-                <div id="postit-${note.id}" style="left:${safeX}px; top:${safeY}px; z-index:${note.zIndex || 35};"
-                    onpointerdown="bringPostItToFront('${note.id}')"
-                    onmouseenter="highlightTether('${note.id}', true)" onmouseleave="highlightTether('${note.id}', false)"
+                <div id="postit-${safeNoteId}" style="left:${safeX}px; top:${safeY}px; z-index:${note.zIndex || 35};"
+                    onpointerdown="bringPostItToFront('${safeNoteId}')"
+                    onmouseenter="highlightTether('${safeNoteId}', true)" onmouseleave="highlightTether('${safeNoteId}', false)"
                     class="postit-card pointer-events-auto fixed w-[290px] sm:w-[310px] rounded-2xl border ${colorClass} flex flex-col max-h-[420px] overflow-hidden">
                     <!-- Drag Header -->
-                    <div onpointerdown="startDragPostIt(event, '${note.id}')" class="postit-drag-handle note-header px-3 py-2 flex items-center justify-between gap-1.5 border-b border-black/5 shrink-0">
+                    <div onpointerdown="startDragPostIt(event, '${safeNoteId}')" class="postit-drag-handle note-header px-3 py-2 flex items-center justify-between gap-1.5 border-b border-black/5 shrink-0">
                         <div class="flex items-center gap-1.5 min-w-0">
                             <span class="text-xs">📌</span>
-                            <span class="text-xs font-semibold text-[#2b2504] truncate">${escapeHtml(note.title || 'Side Clarifier')}</span>
+                            <span id="postit-title-${safeNoteId}" class="text-xs font-semibold text-[#2b2504] truncate">${escapeHtml(note.title || 'Side Clarifier')}</span>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
-                            <button type="button" onclick="cyclePostItColor('${note.id}')" title="Change note color" class="w-5 h-5 rounded-full border border-black/15 bg-white/60 hover:bg-white text-[10px] flex items-center justify-center">🎨</button>
-                            <button type="button" onclick="toggleMinimizePostIt('${note.id}')" title="Minimize" class="w-5 h-5 rounded-full hover:bg-black/10 text-xs flex items-center justify-center">–</button>
-                            <button type="button" onclick="deletePostIt('${note.id}')" title="Delete note" class="w-5 h-5 rounded-full hover:bg-black/10 text-xs flex items-center justify-center">✕</button>
+                            <button type="button" onclick="cyclePostItColor('${safeNoteId}')" title="Change note color" class="w-5 h-5 rounded-full border border-black/15 bg-white/60 hover:bg-white text-[10px] flex items-center justify-center">🎨</button>
+                            <button type="button" onclick="toggleMinimizePostIt('${safeNoteId}')" title="Minimize" class="w-5 h-5 rounded-full hover:bg-black/10 text-xs flex items-center justify-center">–</button>
+                            <button type="button" onclick="deletePostIt('${safeNoteId}')" title="Delete note" class="w-5 h-5 rounded-full hover:bg-black/10 text-xs flex items-center justify-center">✕</button>
                         </div>
                     </div>
 
@@ -1180,7 +1355,7 @@
                     ` : ''}
 
                     <!-- Note Conversation Body -->
-                    <div id="postit-msgs-${note.id}" class="flex-1 overflow-y-auto clean-scroll p-3 space-y-2.5 text-xs text-[#1f1f1f]">
+                    <div id="postit-msgs-${safeNoteId}" class="flex-1 overflow-y-auto clean-scroll p-3 space-y-2.5 text-xs text-[#1f1f1f]">
                         ${(note.messages || []).length === 0 ? `
                             <div class="text-[11px] text-[#444746] leading-relaxed">
                                 Ask a quick question here—your Main Thread context is included automatically without cluttering it.
@@ -1198,27 +1373,25 @@
 
                     <!-- Promote Action + Input -->
                     <div class="p-2 border-t border-black/10 bg-white/40 space-y-1.5 shrink-0">
-                        ${(note.messages || []).some(m => m.role === 'assistant' && !m.isTyping) ? `
-                            <div class="flex justify-end">
-                                <button type="button" onclick="promotePostItToMain('${note.id}')"
-                                    class="text-[10px] font-semibold text-[#1a73e8] hover:underline px-1">
-                                    ↗ Merge takeaway into Main Thread
-                                </button>
-                            </div>
-                        ` : ''}
+                        <div id="postit-promote-${safeNoteId}" class="flex justify-end ${hasAssistantReply ? '' : 'hidden'}">
+                            <button type="button" onclick="promotePostItToMain('${safeNoteId}')"
+                                class="text-[10px] font-semibold text-[#1a73e8] hover:underline px-1">
+                                ↗ Merge takeaway into Main Thread
+                            </button>
+                        </div>
                         <div class="flex items-center gap-1.5 bg-white/90 rounded-xl px-2.5 py-1 border border-black/10">
-                            <input id="postit-input-${note.id}" type="text" placeholder="Ask side question..."
-                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendPostItMessage('${note.id}'); }"
+                            <input id="postit-input-${safeNoteId}" type="text" placeholder="Ask side question..."
+                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); sendPostItMessage('${safeNoteId}'); }"
                                 class="ipad-safe-input flex-1 bg-transparent border-0 focus:outline-none text-xs text-[#1f1f1f] placeholder-[#5f6368] py-1" />
-                            <button type="button" onclick="sendPostItMessage('${note.id}')"
-                                class="w-7 h-7 rounded-lg bg-[#1f1f1f] hover:bg-black text-white flex items-center justify-center text-xs shrink-0">↑</button>
+                            <button id="postit-send-${safeNoteId}" type="button" onclick="sendPostItMessage('${safeNoteId}')"
+                                class="w-7 h-7 rounded-lg bg-[#1f1f1f] hover:bg-black disabled:bg-slate-400 text-white flex items-center justify-center text-xs shrink-0">↑</button>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
 
-        drawTetherLines();
+        scheduleTetherDraw();
     }
 
     function spawnPostItNote(customTitle = '', initialQuestion = '', anchorQuote = '', anchorMessageId = null) {
@@ -1350,24 +1523,41 @@
 
         bringPostItToFront(noteId);
         card.classList.add('dragging');
+        // Read current clamped visual coordinates so resized cards don't jump
+        const rect = card.getBoundingClientRect();
+        note.x = rect.left;
+        note.y = rect.top;
+
         activeDrag = {
             noteId,
             startX: e.clientX,
             startY: e.clientY,
-            origX: note.x,
-            origY: note.y
+            origX: rect.left,
+            origY: rect.top
         };
+    }
+
+    function endDragPostIt() {
+        if (!activeDrag) return;
+        const card = document.getElementById(`postit-${activeDrag.noteId}`);
+        if (card) card.classList.remove('dragging');
+        activeDrag = null;
+        saveState();
     }
 
     async function sendPostItMessage(noteId) {
         const input = document.getElementById(`postit-input-${noteId}`);
+        const sendBtn = document.getElementById(`postit-send-${noteId}`);
         if (!input) return;
         const text = input.value.trim();
         if (!text) return;
 
         const sess = getActiveSession();
         const note = (sess.postIts || []).find(n => n.id === noteId);
-        if (!note) return;
+        if (!note || note._isSending) return;
+
+        note._isSending = true;
+        if (sendBtn) sendBtn.disabled = true;
 
         if (!note.messages) note.messages = [];
         if (note.messages.length === 0 && (note.title === 'Side Clarifier' || note.title === 'Clarify Reply')) {
@@ -1380,18 +1570,23 @@
 
         input.value = '';
         saveState();
-        renderPostItNotes();
+        // Update only this Post-It's message list so other open Post-Its keep focus & draft text
+        renderSinglePostItMessages(noteId);
 
         const recentMain = (sess.messages || []).filter(m => !m.isTyping).slice(-10);
-        const result = await queryGeminiOrFallback(recentMain, note);
+        let result;
+        try {
+            result = await queryGeminiOrFallback(recentMain, note);
+        } finally {
+            note._isSending = false;
+            if (sendBtn) sendBtn.disabled = false;
+        }
 
         note.messages = note.messages.filter(m => m.id !== typingId);
         note.messages.push({ role: 'assistant', content: result.text });
 
         saveState();
-        renderPostItNotes();
-        const box = document.getElementById(`postit-msgs-${noteId}`);
-        if (box) box.scrollTop = box.scrollHeight;
+        renderSinglePostItMessages(noteId);
     }
 
     function promotePostItToMain(noteId) {
@@ -1416,13 +1611,24 @@
         showToast('Merged into Main Thread');
     }
 
+    function scheduleTetherDraw(activeNoteId = null) {
+        if (tetherRafPending && !activeNoteId) return;
+        tetherRafPending = true;
+        requestAnimationFrame(() => {
+            tetherRafPending = false;
+            drawTetherLines(activeNoteId);
+        });
+    }
+
     function drawTetherLines(activeNoteId = null) {
         const svg = document.getElementById('tether-svg');
+        const scroller = document.getElementById('main-thread-scroll');
         if (!svg) return;
         if (!notesVisible) {
             svg.innerHTML = '';
             return;
         }
+        const scrollBounds = scroller ? scroller.getBoundingClientRect() : { top: 56, bottom: window.innerHeight - 80 };
         const sess = getActiveSession();
         const lines = [];
         (sess.postIts || []).forEach(note => {
@@ -1433,8 +1639,13 @@
 
             const mRect = msgEl.getBoundingClientRect();
             const nRect = noteEl.getBoundingClientRect();
+            const anchorY = mRect.top + Math.min(36, mRect.height / 2);
+
+            // Hide tether when the anchored message scrolls out of the visible scroll container
+            if (anchorY < scrollBounds.top + 8 || anchorY > scrollBounds.bottom - 8) return;
+
             const x1 = Math.min(mRect.right, nRect.left);
-            const y1 = mRect.top + Math.min(36, mRect.height / 2);
+            const y1 = anchorY;
             const x2 = nRect.left;
             const y2 = nRect.top + 20;
             const isHover = activeNoteId === note.id;
@@ -1444,11 +1655,11 @@
     }
 
     function highlightTether(noteId, active) {
-        drawTetherLines(active ? noteId : null);
+        scheduleTetherDraw(active ? noteId : null);
     }
 
     // =========================================================================
-    // GEMINI API + AUTOMATIC 3X SAME-MODEL RETRY
+    // GEMINI API + ALTERNATING-ROLE NORMALIZATION + 3X RETRY
     // =========================================================================
     async function fetchWithTimeout(url, options, timeoutMs = 28000, externalController = null) {
         const controller = externalController || new AbortController();
@@ -1463,11 +1674,29 @@
         }
     }
 
+    // Ensure contents strictly alternate user/model and begin with 'user'
+    function normalizeApiContents(rawTurns) {
+        const merged = [];
+        for (const turn of rawTurns) {
+            if (!turn || !Array.isArray(turn.parts) || turn.parts.length === 0) continue;
+            const prev = merged[merged.length - 1];
+            if (prev && prev.role === turn.role) {
+                prev.parts.push(...turn.parts);
+            } else {
+                merged.push({ role: turn.role, parts: [...turn.parts] });
+            }
+        }
+        if (merged.length > 0 && merged[0].role !== 'user') {
+            merged.unshift({ role: 'user', parts: [{ text: '(Continued conversation context)' }] });
+        }
+        return merged;
+    }
+
     async function queryGeminiOrFallback(mainMessages, sideNote, onRetryStatus) {
         const apiKey = (appSettings.apiKey || '').trim();
         const rawModel = sideNote && appSettings.noteModel && appSettings.noteModel !== 'same'
             ? appSettings.noteModel
-            : (appSettings.model || 'gemini-4-hydrogen');
+            : (appSettings.model || 'gemini-2.5-flash');
         const cleanModel = rawModel.replace(/^models\//, '');
 
         if (!apiKey || cleanModel === 'demo') {
@@ -1485,7 +1714,7 @@
             };
         }
 
-        const contents = [];
+        const rawTurns = [];
         let systemInstructionText = 'You are Gemini, a sharp senior software architect and coding collaborator. Provide clean, well-structured, runnable code and clear architectural guidance.';
 
         if (sideNote) {
@@ -1498,7 +1727,7 @@
             systemInstructionText = `You are a concise, laser-focused sidekick clarifier attached to a floating Post-It note next to the user's main development thread. Answer briefly and directly using the Main Thread context below without repeating the whole main thread.\n\n--- MAIN THREAD CONTEXT ---\n${threadSummary}${sideNote.anchorQuote ? `\n\n--- HIGHLIGHTED EXCERPT ---\n"${sideNote.anchorQuote}"` : ''}`;
 
             (sideNote.messages || []).filter(m => !m.isTyping).forEach(m => {
-                contents.push({
+                rawTurns.push({
                     role: m.role === 'user' ? 'user' : 'model',
                     parts: [{ text: m.content }]
                 });
@@ -1526,13 +1755,14 @@
                 if (parts.length === 0) {
                     parts.push({ text: ' ' });
                 }
-                contents.push({
+                rawTurns.push({
                     role: m.role === 'user' ? 'user' : 'model',
                     parts
                 });
             });
         }
 
+        const contents = normalizeApiContents(rawTurns);
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(cleanModel)}:generateContent?key=${encodeURIComponent(apiKey)}`;
         const payload = {
             systemInstruction: { parts: [{ text: systemInstructionText }] },
@@ -1564,7 +1794,7 @@
                         continue;
                     }
                     return {
-                        text: `**Gemini API Error (${cleanModel}):** ${lastErrorDetail}\n\n*Tip: Preview models like Neon occasionally saturate; if it stays busy, switch to **gemini-4-hydrogen** or **gemini-2.5-pro** in Settings (⚙️).*`,
+                        text: `**Gemini API Error (${cleanModel}):** ${lastErrorDetail}\n\n*Tip: Click **Test** in Settings (⚙️) to load the exact models enabled for your API key, or switch to **gemini-2.5-flash** / **gemini-2.5-pro**.*`,
                         modelUsed: cleanModel
                     };
                 }
@@ -1612,7 +1842,7 @@
         if (!dot || !label) return;
 
         const hasKey = Boolean((appSettings.apiKey || '').trim());
-        const cleanModel = (appSettings.model || 'gemini-4-hydrogen').replace(/^models\//, '');
+        const cleanModel = (appSettings.model || 'gemini-2.5-flash').replace(/^models\//, '');
 
         if (!hasKey || cleanModel === 'demo') {
             dot.className = 'w-2 h-2 rounded-full bg-amber-500 shrink-0';
@@ -1623,16 +1853,22 @@
         }
     }
 
-    function openSettingsModal() {
+    function openSettingsModal(section = 'api') {
         const modal = document.getElementById('settings-modal');
         const keyInput = document.getElementById('settings-api-key');
+        const visBtn = document.getElementById('toggle-key-vis-btn');
         const modelSelect = document.getElementById('settings-model-select');
         const noteSelect = document.getElementById('settings-note-model-select');
         const statusEl = document.getElementById('api-test-status');
 
-        if (keyInput) keyInput.value = appSettings.apiKey || '';
+        if (keyInput) {
+            keyInput.type = 'password';
+            keyInput.value = appSettings.apiKey || '';
+        }
+        if (visBtn) visBtn.textContent = 'Show';
+
         if (modelSelect) {
-            const targetModel = (appSettings.model || 'gemini-4-hydrogen').replace(/^models\//, '');
+            const targetModel = (appSettings.model || 'gemini-2.5-flash').replace(/^models\//, '');
             if (!Array.from(modelSelect.options).some(o => o.value === targetModel)) {
                 const opt = document.createElement('option');
                 opt.value = targetModel;
@@ -1651,6 +1887,12 @@
             statusEl.className = 'text-xs text-[#5f6368]';
         }
         modal?.classList.remove('hidden');
+
+        if (section === 'sync') {
+            requestAnimationFrame(() => {
+                document.getElementById('settings-sync-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
     }
 
     function closeSettingsModal() {
@@ -1659,8 +1901,11 @@
 
     function toggleApiKeyVisibility() {
         const keyInput = document.getElementById('settings-api-key');
+        const visBtn = document.getElementById('toggle-key-vis-btn');
         if (!keyInput) return;
-        keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
+        const showing = keyInput.type === 'text';
+        keyInput.type = showing ? 'password' : 'text';
+        if (visBtn) visBtn.textContent = showing ? 'Show' : 'Hide';
     }
 
     async function testGeminiConnection() {
@@ -1716,12 +1961,10 @@
                     `<option value="demo">Demo Mode — Offline Simulated</option>`;
                 if (validModels.includes(prevMain)) {
                     modelSelect.value = prevMain;
-                } else if (validModels.includes('gemini-4-hydrogen')) {
-                    modelSelect.value = 'gemini-4-hydrogen';
-                } else if (validModels.includes('gemini-2.5-pro')) {
-                    modelSelect.value = 'gemini-2.5-pro';
                 } else if (validModels.includes('gemini-2.5-flash')) {
                     modelSelect.value = 'gemini-2.5-flash';
+                } else if (validModels.includes('gemini-2.5-pro')) {
+                    modelSelect.value = 'gemini-2.5-pro';
                 }
             }
 
@@ -1744,7 +1987,7 @@
 
     function saveSettingsFromModal() {
         const keyVal = (document.getElementById('settings-api-key')?.value || '').replace(/\s+/g, '');
-        const modelVal = document.getElementById('settings-model-select')?.value || 'gemini-4-hydrogen';
+        const modelVal = document.getElementById('settings-model-select')?.value || 'gemini-2.5-flash';
         const noteModelVal = document.getElementById('settings-note-model-select')?.value || 'gemini-2.5-flash';
 
         appSettings.apiKey = keyVal;
@@ -1786,10 +2029,32 @@
                     showToast('Invalid workspace JSON file');
                     return;
                 }
-                sessions = parsed.sessions;
-                activeSessionId = parsed.activeSessionId && sessions.some(s => s.id === parsed.activeSessionId)
-                    ? parsed.activeSessionId
+                // Sanitize all imported IDs to prevent unsafe attribute interpolation
+                sessions = parsed.sessions.map(s => ({
+                    id: sanitizeId(s.id, 'sess'),
+                    title: String(s.title || 'Imported Thread'),
+                    updatedAt: Number(s.updatedAt) || Date.now(),
+                    messages: Array.isArray(s.messages)
+                        ? s.messages.filter(m => !m.isTyping).map(m => ({
+                            ...m,
+                            id: sanitizeId(m.id, 'msg')
+                        }))
+                        : [],
+                    postIts: Array.isArray(s.postIts)
+                        ? s.postIts.map(n => ({
+                            ...n,
+                            id: sanitizeId(n.id, 'note'),
+                            anchorMessageId: n.anchorMessageId ? sanitizeId(n.anchorMessageId, 'msg') : null,
+                            messages: Array.isArray(n.messages) ? n.messages.filter(nm => !nm.isTyping) : []
+                        }))
+                        : []
+                }));
+
+                const requestedActive = parsed.activeSessionId ? sanitizeId(parsed.activeSessionId, 'sess') : '';
+                activeSessionId = requestedActive && sessions.some(s => s.id === requestedActive)
+                    ? requestedActive
                     : sessions[0].id;
+
                 saveState();
                 renderAll();
                 closeSettingsModal();
@@ -1834,7 +2099,7 @@
 
         const customTitle = (titleInput?.value || '').trim();
         const messages = [];
-        const turnRegex = /(?:^|\n)(You said|User|Gemini said|Gemini|Model)\s*:?\s*\n/gi;
+        const turnRegex = /(?:^|\r?\n)(You said|User|Gemini said|Gemini|Model)\s*:?\s*\r?\n/gi;
         const parts = rawText.split(turnRegex);
 
         if (parts.length >= 3) {
@@ -1976,8 +2241,13 @@
         window.addEventListener('resize', () => {
             syncViewportHeight();
             applyLeftSidebarUI();
-            drawTetherLines();
+            scheduleTetherDraw();
         });
+
+        const scroller = document.getElementById('main-thread-scroll');
+        if (scroller) {
+            scroller.addEventListener('scroll', () => scheduleTetherDraw(), { passive: true });
+        }
 
         document.addEventListener('selectionchange', () => {
             clearTimeout(window._selTimer);
@@ -1998,16 +2268,11 @@
 
             card.style.left = `${note.x}px`;
             card.style.top = `${note.y}px`;
-            drawTetherLines(note.id);
+            scheduleTetherDraw(note.id);
         });
 
-        document.addEventListener('pointerup', () => {
-            if (!activeDrag) return;
-            const card = document.getElementById(`postit-${activeDrag.noteId}`);
-            if (card) card.classList.remove('dragging');
-            activeDrag = null;
-            saveState();
-        });
+        document.addEventListener('pointerup', endDragPostIt);
+        document.addEventListener('pointercancel', endDragPostIt);
     }
 
     if (document.readyState === 'loading') {
